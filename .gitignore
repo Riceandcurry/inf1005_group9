@@ -1,0 +1,2 @@
+# Ignore vscode launch configurations and settings
+.vscode/*
