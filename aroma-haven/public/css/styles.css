@@ -454,7 +454,140 @@ h6,
   padding: 0.9rem 0;
 }
 
+/* 7. LOGIN PAGE */
+.ah-login-page,
+.ah-login-main,
+.ah-login-main > .container-fluid {
+  min-height: 100vh;
+}
+
+.ah-login-main .row {
+  min-height: 0;
+  height: auto;
+}
+
+.ah-login-visual {
+  min-height: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.ah-login-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.ah-login-overlay-text {
+  position: absolute;
+  left: 50%;
+  bottom: 3rem;
+  transform: translateX(-50%);
+  width: min(620px, 92%);
+  color: var(--ah-oat);
+  text-shadow: 0 2px 12px rgba(42, 32, 28, 0.45);
+}
+
+.ah-login-overlay-text h1 {
+  font-family: "Playfair Display", serif;
+  color: var(--ah-oat);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+}
+
+.ah-login-overlay-text p {
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
+  line-height: 1.4;
+  font-size: clamp(1rem, 2vw, 1.45rem);
+}
+
+.ah-login-form-wrap {
+  padding: 1.5rem 4rem 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
+.ah-login-form-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ah-login-top-row {
+  color: var(--ah-cortado);
+}
+
+.ah-register-page .ah-login-form-content {
+  justify-content: center;
+}
+
+.ah-register-form .form-select {
+  color: var(--ah-cortado);
+}
+
+.ah-register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: auto;
+}
+
+.ah-register-form > .row,
+.ah-register-form > div {
+  margin-bottom: 0 !important;
+}
+
+
+.ah-login-back {
+  text-decoration: none;
+  color: var(--ah-cortado);
+  font-size: 0.875rem;
+}
+
+.ah-login-back:hover {
+  color: var(--ah-terracotta);
+}
+
+.ah-login-brand {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ah-login-subtitle {
+  font-size: 1rem;
+  color: var(--ah-cortado);
+}
+
+.ah-login-input {
+  border-color: rgba(42, 32, 28, 0.55);
+  background-color: var(--ah-oat);
+}
+
+.ah-login-register-note {
+  font-size: 0.875rem;
+  color: var(--ah-cortado);
+}
+
+.ah-login-register-note a {
+  text-decoration: none;
+  color: var(--ah-terracotta);
+}
+
+.ah-login-register-note a:hover {
+  color: var(--ah-terracotta-hover);
+  text-decoration: underline;
+}
+
 @media (max-width: 991.98px) {
+  .ah-login-main .row {
+    min-height: auto;
+    height: auto;
+  }
   .ah-brand {
     min-height: 80px;
     width: 160px;
@@ -506,6 +639,21 @@ h6,
     text-align: center;
     padding: 0.65rem 0.75rem;
   }
+
+  .ah-login-visual {
+    height: 420px;
+    min-height: 0;
+  }
+
+
+  .ah-login-form-content {
+    display: block;
+  }
+
+  .ah-login-overlay-text {
+    bottom: 1.5rem;
+    width: min(520px, 94%);
+  }
 }
 
 @media (max-width: 767.98px) {
@@ -521,4 +669,45 @@ h6,
     max-width: 100%;
     height: 200px;
   }
+
+  .ah-login-visual {
+    height: 320px;
+    min-height: 0;
+  }
+
+  .ah-login-top-row {
+    margin-bottom: 2rem !important;
+  }
+
+  .ah-login-top-row .ah-login-brand {
+    display: none;
+  }
+
+  .ah-login-overlay-text {
+    width: 92%;
+  }
+
+  .ah-login-overlay-text h1 {
+    font-size: 2rem;
+  }
+
+  .ah-login-overlay-text p {
+    font-size: 1.2rem;
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
