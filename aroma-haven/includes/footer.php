@@ -7,9 +7,9 @@
       <div class="col-6 col-md-3">
         <p class="text-overline text-oat mb-2">About us</p>
         <ul class="list-unstyled ah-footer-links mb-0">
-          <li><a href="about-us.php">About Aroma Haven</a></li>
-          <li><a href="about-us.php">Our philosophy</a></li>
-          <li><a href="about-us.php">Our ethos</a></li>
+          <li><a href="about-us.php#about-aroma-haven">About Aroma Haven</a></li>
+          <li><a href="about-us.php#philosophy">Our philosophy</a></li>
+          <li><a href="about-us.php#ethos">Our ethos</a></li>
         </ul>
       </div>
       <div class="col-6 col-md-3">
