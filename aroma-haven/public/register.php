@@ -1,6 +1,14 @@
 <?php
 $pageTitle = 'Aroma Haven | Register';
 include __DIR__ . '/../includes/header.php';
+session_start();
+if (session_status() !== PHP_SESSION_ACTIVE)
+    session_start();
+
+if (isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
 ?>
 
 <main class="ah-login-page ah-register-page">
@@ -62,6 +70,13 @@ include __DIR__ . '/../includes/header.php';
 
                                 <button type="submit" class="btn btn-primary w-100">Register</button>
                                 <input type="hidden" name="action" value="register">
+                                <?php
+                                    echo "<p style='color:red'>" . "Debugging- Session Status:". session_status()  . "</p>";
+                                    if (isset($_SESSION['error'])) {
+                                        echo "<p style='color:red'>" . $_SESSION['error'] . "test" . "</p>";
+                                        unset($_SESSION['error']);
+                                    }                                
+                                ?>
                             </form>
 
                             <p class="ah-login-register-note text-center mt-3 mb-0">

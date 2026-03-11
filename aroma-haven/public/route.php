@@ -10,19 +10,35 @@ switch ($method) {
         switch ($action) {
             case 'register':
                 $result = register_process($_POST);
-                break;
+                if(empty($result)){
+                    $_SESSION['msg'] = "Account Created Sucessfully!";
+                    header("Location: login.php");
+                    exit;  
+                }
+                else{ 
+                    //echo session_status();                
+                    $_SESSION['error'] = $result;
+                    header("Location: register.php");
+                    exit;
+                }
+
             default:
                 $result = "Unknown POST action.";
+                break;
         }
         break;
 
     case 'GET':
-        break;
+        switch($action){
+            case 'login':
+                break;
+               
+        }        
     default:
         $result = "Unsupported HTTP method: $method";
 }
 
-// Output the result
+// for Debugging
 if (is_string($result)) {
     echo $result;
 } else {

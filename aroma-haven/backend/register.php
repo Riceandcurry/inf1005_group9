@@ -40,10 +40,7 @@ function register_process($data){
         $stmt->close();
         $conn->close();
     }
-    else
-        echo $errorMsg;
+    return $errorMsg;
 
-    header("Location: login.php");
-    exit;
 }
 ?>
