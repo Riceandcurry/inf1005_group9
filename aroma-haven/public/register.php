@@ -26,7 +26,7 @@ include __DIR__ . '/../includes/header.php';
                             <h2 class="mb-3">Join the Regulars</h2>
                             <p class="ah-login-subtitle mb-4">Create an account to save your brew preferences and order history.</p>
 
-                            <form action="#" method="post" class="ah-register-form">
+                            <form action="route.php" method="post" class="ah-register-form">
                                 <div class="row g-3 mb-3">
                                     <div class="col-12 col-md-6">
                                         <label for="first_name" class="form-label text-overline mb-1">First name</label>
@@ -52,15 +52,16 @@ include __DIR__ . '/../includes/header.php';
                                     <label for="brew_method" class="form-label text-overline mb-1">How do you usually brew?</label>
                                     <select id="brew_method" name="brew_method" class="form-select ah-login-input" required>
                                         <option value="" selected disabled>Select an option...</option>
-                                        <option value="espresso">Espresso</option>
-                                        <option value="pour-over">Pour Over</option>
-                                        <option value="french-press">French Press</option>
-                                        <option value="aeropress">Aeropress</option>
-                                        <option value="drip">Drip Machine</option>
+                                        <option value="1">Espresso</option>
+                                        <option value="2">Pour Over</option>
+                                        <option value="3">French Press</option>
+                                        <option value="4">Aeropress</option>
+                                        <option value="5">Drip Machine</option>
                                     </select>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary w-100">Register</button>
+                                <input type="hidden" name="action" value="register">
                             </form>
 
                             <p class="ah-login-register-note text-center mt-3 mb-0">
