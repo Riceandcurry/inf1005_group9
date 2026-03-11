@@ -1,9 +1,9 @@
 <?php
 $pageTitle = 'Aroma Haven | Register';
 include __DIR__ . '/../includes/header.php';
-session_start();
-if (session_status() !== PHP_SESSION_ACTIVE)
-    session_start();
+if (session_status() !== PHP_SESSION_ACTIVE){
+    session_start();    
+}
 
 if (isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -71,9 +71,9 @@ if (isset($_SESSION['user_id'])) {
                                 <button type="submit" class="btn btn-primary w-100">Register</button>
                                 <input type="hidden" name="action" value="register">
                                 <?php
-                                    echo "<p style='color:red'>" . "Debugging- Session Status:". session_status()  . "</p>";
+                                    #echo "<p style='color:red'>" . "Debugging- Session Status:". session_status()  .session_id() ."</p>";
                                     if (isset($_SESSION['error'])) {
-                                        echo "<p style='color:red'>" . $_SESSION['error'] . "test" . "</p>";
+                                        echo "<p style='color:red'>" . $_SESSION['error'] . "</p>";
                                         unset($_SESSION['error']);
                                     }                                
                                 ?>

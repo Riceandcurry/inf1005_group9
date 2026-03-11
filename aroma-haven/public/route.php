@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../backend/register.php';
 //require_once __DIR__ . '/../backend/login_process.php';
-
+session_start();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_REQUEST['action'] ?? '';
 
@@ -15,8 +15,7 @@ switch ($method) {
                     header("Location: login.php");
                     exit;  
                 }
-                else{ 
-                    //echo session_status();                
+                else{                                 
                     $_SESSION['error'] = $result;
                     header("Location: register.php");
                     exit;
