@@ -5,15 +5,15 @@ $brewGuidesCards = [
     'title' => 'French Press',
     'description' => 'Forgiving, rich, and beginner-friendly. Great first method.',
     'image' => './images/assets/french_press_brew.jpg',
-    'style' => 'french-press',
-    'time' => '4 minutes'
+    'style' => 'classic italian style',
+    'time' => '3 minutes'
 
   ],
   [
     'title' => 'Pour Over',
     'description' => 'Clean and sweet cup with easy timing prompts',
     'image' => './images/assets/pour_over_brew.jpg',
-    'style' => 'french-press',
+    'style' => 'classic belgian style',
     'time' => '4 minutes'
   ],
   [
@@ -46,6 +46,7 @@ include __DIR__ . '/../includes/navbar.php';
     <section>
         <div class="brew-guides-banner">
             <img class="about-us-image" src="images/assets/brew_guide_banner.jpg" alt="Brew Guide banner">
+            <!--<div class="brew-guide-banner-text">Coffee Brew Guides</div>-->
         </div>
         <div>
             <div class="products-grid">
@@ -54,8 +55,8 @@ include __DIR__ . '/../includes/navbar.php';
                     <h3 class="ah-guide-title mb-2"><?php echo htmlspecialchars($guide['title'], ENT_QUOTES, 'UTF-8'); ?></h3>
                     <p class="ah-guide-copy mb-2"><?php echo htmlspecialchars($guide['description'], ENT_QUOTES, 'UTF-8'); ?></p>
                     <img src="<?php echo htmlspecialchars($guide['image'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($guide['title'], ENT_QUOTES, 'UTF-8'); ?>" class="ah-guide-image">
-                    <p class="ah-guide-copy mb-2"><?php echo htmlspecialchars($guide['style'], ENT_QUOTES, 'UTF-8'); ?></p>
-                    <p class="ah-guide-copy mb-2"><?php echo htmlspecialchars($guide['time'], ENT_QUOTES, 'UTF-8'); ?></p>
+                    <p style="color: var(--ah-cortado);"><?php echo htmlspecialchars($guide['style'], ENT_QUOTES, 'UTF-8'); ?></p>
+                    <p style="color: var(--ah-cortado);"><?php echo htmlspecialchars($guide['time'], ENT_QUOTES, 'UTF-8'); ?></p>
                 </div>
                 <?php endforeach; ?>
             </div>
