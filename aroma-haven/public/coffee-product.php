@@ -98,11 +98,20 @@ include __DIR__ . '/../includes/navbar.php';
 
             <div class="d-flex align-items-stretch gap-3 ah-coffee-purchase-row">
               <div class="ah-qty-pill" role="group" aria-label="Quantity">
-                <button type="button" aria-label="Decrease quantity">-</button>
-                <span>1</span>
-                <button type="button" aria-label="Increase quantity">+</button>
+                <button type="button" id="ahProductQtyDec" aria-label="Decrease quantity">-</button>
+                <span id="ahProductQtyNum">1</span>
+                <button type="button" id="ahProductQtyInc" aria-label="Increase quantity">+</button>
               </div>
-              <a href="cart.php" class="btn btn-primary ah-coffee-add-btn">Add to Cart</a>
+              <button type="button"
+                class="btn btn-primary ah-coffee-add-btn"
+                data-id="<?php echo htmlspecialchars($bean['id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                data-name="<?php echo htmlspecialchars($bean['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                data-origin="<?php echo htmlspecialchars($bean['origin'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                data-price="<?php echo htmlspecialchars($bean['price'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                data-image="<?php echo htmlspecialchars($bean['image'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                data-roast="<?php echo htmlspecialchars($bean['roast'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                data-tags="<?php echo htmlspecialchars(implode(',', (array)($bean['tags'] ?? [])), ENT_QUOTES, 'UTF-8'); ?>"
+              >Add to Cart</button>
             </div>
           </div>
         </div>

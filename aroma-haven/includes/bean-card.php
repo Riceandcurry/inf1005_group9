@@ -42,6 +42,15 @@ $beanCtaHref = $bean['cta_href'] ?? $defaultAddHref;
     <?php endif; ?>
   </a>
   <div class="d-flex justify-content-end mt-3 position-relative z-1">
-    <a href="<?php echo htmlspecialchars($beanCtaHref, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-primary btn-sm ah-add-btn"><?php echo htmlspecialchars($beanCtaLabel, ENT_QUOTES, 'UTF-8'); ?></a>
+    <button type="button"
+      class="btn btn-primary btn-sm ah-add-btn ah-bean-add-btn"
+      data-id="<?php echo htmlspecialchars($beanId, ENT_QUOTES, 'UTF-8'); ?>"
+      data-name="<?php echo htmlspecialchars($beanName, ENT_QUOTES, 'UTF-8'); ?>"
+      data-origin="<?php echo htmlspecialchars($beanOrigin, ENT_QUOTES, 'UTF-8'); ?>"
+      data-price="<?php echo htmlspecialchars($beanPrice, ENT_QUOTES, 'UTF-8'); ?>"
+      data-image="<?php echo htmlspecialchars($beanImage, ENT_QUOTES, 'UTF-8'); ?>"
+      data-roast="<?php echo htmlspecialchars($beanRoast ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+      data-tags="<?php echo htmlspecialchars(implode(',', $beanTags), ENT_QUOTES, 'UTF-8'); ?>"
+    ><?php echo htmlspecialchars($beanCtaLabel, ENT_QUOTES, 'UTF-8'); ?></button>
   </div>
 </article>

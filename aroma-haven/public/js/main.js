@@ -47,7 +47,7 @@
         id:     id,
         name:   product.name   || 'Unknown',
         origin: product.origin || '',
-        price:  parseFloat(product.price) || 0,
+        price:  parseFloat(String(product.price).replace(/[^0-9.]/g, '')) || 0,
         image:  product.image  || '',
         roast:  product.roast  || '',
         tags:   Array.isArray(product.tags) ? product.tags : [],
@@ -83,7 +83,7 @@
     if (!has) { itemsEl.innerHTML = ''; return; }
 
     itemsEl.innerHTML = items.map(function (item) {
-      var price = item.price ? '$' + parseFloat(item.price).toFixed(2) : '$?';
+      var price = '$' + Number(item.price).toFixed(2);
       var tags  = (item.tags || []).map(function (t) {
         return '<span class="ah-cart-item-tag">' + esc(t) + '</span>';
       }).join('');
@@ -157,6 +157,10 @@
     window.location.href = 'shop-coffee.php';
   });
 
+  document.getElementById('ahCartCheckoutBtn').addEventListener('click', function () {
+    window.location.href = 'checkout.php';
+  });
+
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeCart();
   });
@@ -166,6 +170,49 @@
     history.replaceState(null, '', window.location.pathname + window.location.search);
     openCart();
   }
+
+  /* ── shop card & product page add-to-cart ── */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.ah-bean-add-btn[data-id], .ah-coffee-add-btn[data-id]');
+    if (!btn) return;
+    var qtyEl = document.getElementById('ahProductQtyNum');
+    var qty   = qtyEl ? Math.max(1, parseInt(qtyEl.textContent, 10) || 1) : 1;
+    var id    = String(btn.getAttribute('data-id'));
+    var cart  = loadCart();
+    if (cart[id]) {
+      cart[id].qty = Math.min(cart[id].qty + qty, 99);
+    } else {
+      cart[id] = {
+        id:     id,
+        name:   btn.getAttribute('data-name')   || 'Unknown',
+        origin: btn.getAttribute('data-origin') || '',
+        price:  parseFloat(String(btn.getAttribute('data-price') || '').replace(/[^0-9.]/g, '')) || 0,
+        image:  btn.getAttribute('data-image')  || '',
+        roast:  btn.getAttribute('data-roast')  || '',
+        tags:   (btn.getAttribute('data-tags') || '').split(',').filter(Boolean),
+        qty:    qty
+      };
+    }
+    saveCart(cart);
+    renderCart(Object.values(cart));
+    openCart();
+  });
+
+  /* ── product page qty stepper ── */
+  (function () {
+    var qtyNum = document.getElementById('ahProductQtyNum');
+    var qtyDec = document.getElementById('ahProductQtyDec');
+    var qtyInc = document.getElementById('ahProductQtyInc');
+    if (!qtyNum || !qtyDec || !qtyInc) return;
+    qtyDec.addEventListener('click', function () {
+      var q = parseInt(qtyNum.textContent, 10);
+      if (q > 1) qtyNum.textContent = q - 1;
+    });
+    qtyInc.addEventListener('click', function () {
+      var q = parseInt(qtyNum.textContent, 10);
+      if (q < 99) qtyNum.textContent = q + 1;
+    });
+  }());
 
   /* ── restore cart on page load ── */
   renderCart(Object.values(loadCart()));

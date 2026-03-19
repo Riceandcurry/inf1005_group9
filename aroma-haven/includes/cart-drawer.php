@@ -41,51 +41,45 @@
 
   <p class="ah-cart-rec-label">We think you may like</p>
 
+  <?php
+    require_once __DIR__ . '/bean-catalog.php';
+    $ahAllBeans  = array_values(ah_get_bean_catalog());
+    $ahRecKeys   = (count($ahAllBeans) >= 2)
+                     ? array_rand($ahAllBeans, 2)
+                     : [0, min(1, count($ahAllBeans) - 1)];
+    $ahRecBeans  = [$ahAllBeans[$ahRecKeys[0]], $ahAllBeans[$ahRecKeys[1]]];
+  ?>
   <div class="ah-cart-recs">
+    <?php foreach ($ahRecBeans as $ahRec): ?>
     <div class="ah-cart-rec-card">
       <div class="ah-cart-rec-img-wrap">
-        <img src="images/products/product_1.jpg" alt="Bean name" loading="lazy">
-        <span class="ah-cart-rec-roast">Light Roast</span>
+        <img src="<?php echo htmlspecialchars($ahRec['image'], ENT_QUOTES, 'UTF-8'); ?>"
+             alt="<?php echo htmlspecialchars($ahRec['name'], ENT_QUOTES, 'UTF-8'); ?>" loading="lazy">
+        <span class="ah-cart-rec-roast"><?php echo htmlspecialchars($ahRec['roast'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
       </div>
       <div class="ah-cart-rec-info">
         <div>
-          <p class="ah-cart-rec-name mb-0">Bean name</p>
-          <p class="ah-cart-rec-origin mb-0">Bean origin</p>
+          <p class="ah-cart-rec-name mb-0"><?php echo htmlspecialchars($ahRec['name'], ENT_QUOTES, 'UTF-8'); ?></p>
+          <p class="ah-cart-rec-origin mb-0"><?php echo htmlspecialchars($ahRec['origin'], ENT_QUOTES, 'UTF-8'); ?></p>
         </div>
-        <span class="ah-cart-rec-price">$?</span>
+        <span class="ah-cart-rec-price"><?php echo htmlspecialchars($ahRec['price'] ?? '$?', ENT_QUOTES, 'UTF-8'); ?></span>
       </div>
       <div class="ah-cart-rec-tags">
-        <span class="ah-cart-rec-tag">Add</span>
-        <span class="ah-cart-rec-tag">Taste</span>
-        <span class="ah-cart-rec-tag">Notes</span>
+        <?php foreach (array_slice((array)($ahRec['tags'] ?? []), 0, 3) as $ahTag): ?>
+          <span class="ah-cart-rec-tag"><?php echo htmlspecialchars((string)$ahTag, ENT_QUOTES, 'UTF-8'); ?></span>
+        <?php endforeach; ?>
       </div>
       <button class="ah-cart-rec-add-btn" type="button"
-              data-id="rec-1" data-name="Bean name" data-origin="Bean origin"
-              data-price="0" data-image="images/products/product_1.jpg"
-              data-roast="Light Roast" data-tags="Add,Taste,Notes">+ Add to cart</button>
+              data-id="<?php echo htmlspecialchars($ahRec['id'], ENT_QUOTES, 'UTF-8'); ?>"
+              data-name="<?php echo htmlspecialchars($ahRec['name'], ENT_QUOTES, 'UTF-8'); ?>"
+              data-origin="<?php echo htmlspecialchars($ahRec['origin'], ENT_QUOTES, 'UTF-8'); ?>"
+              data-price="<?php echo htmlspecialchars($ahRec['price'] ?? '0', ENT_QUOTES, 'UTF-8'); ?>"
+              data-image="<?php echo htmlspecialchars($ahRec['image'], ENT_QUOTES, 'UTF-8'); ?>"
+              data-roast="<?php echo htmlspecialchars($ahRec['roast'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+              data-tags="<?php echo htmlspecialchars(implode(',', (array)($ahRec['tags'] ?? [])), ENT_QUOTES, 'UTF-8'); ?>"
+      >+ Add to cart</button>
     </div>
-    <div class="ah-cart-rec-card">
-      <div class="ah-cart-rec-img-wrap">
-        <img src="images/products/product_1.jpg" alt="Bean name" loading="lazy">
-        <span class="ah-cart-rec-roast">Light Roast</span>
-      </div>
-      <div class="ah-cart-rec-info">
-        <div>
-          <p class="ah-cart-rec-name mb-0">Bean name</p>
-          <p class="ah-cart-rec-origin mb-0">Bean origin</p>
-        </div>
-        <span class="ah-cart-rec-price">$?</span>
-      </div>
-      <div class="ah-cart-rec-tags">
-        <span class="ah-cart-rec-tag">Add</span>
-        <span class="ah-cart-rec-tag">Taste</span>
-        <span class="ah-cart-rec-tag">Notes</span>
-      </div>
-      <button class="ah-cart-rec-add-btn" type="button"
-              data-id="rec-2" data-name="Bean name" data-origin="Bean origin"
-              data-price="0" data-image="images/products/product_1.jpg"
-              data-roast="Light Roast" data-tags="Add,Taste,Notes">+ Add to cart</button>
-    </div>
+    <?php endforeach; ?>
   </div>
 
   <div class="ah-cart-footer">
