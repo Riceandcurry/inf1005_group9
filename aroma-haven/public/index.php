@@ -1,28 +1,8 @@
 <?php
 $pageTitle = 'Aroma Haven | Home';
-$bestSellerCards = [
-  [
-    'name' => 'Bean name',
-    'origin' => 'Bean origin',
-    'price' => '$?',
-    'roast' => 'Light roast',
-    'image' => './images/products/product_1.jpg'
-  ],
-  [
-    'name' => 'Bean name',
-    'origin' => 'Bean origin',
-    'price' => '$?',
-    'roast' => 'Light roast',
-    'image' => './images/products/product_1.jpg'
-  ],
-  [
-    'name' => 'Bean name',
-    'origin' => 'Bean origin',
-    'price' => '$?',
-    'roast' => 'Light roast',
-    'image' => './images/products/product_1.jpg'
-  ],
-];
+
+require_once __DIR__ . '/../includes/bean-catalog.php';
+$bestSellerCards = ah_get_home_beans();
 
 $featureTags = [
   ['label' => 'Meticulous Quality', 'icon' => './images/assets/achievement.png'],
@@ -86,27 +66,12 @@ include __DIR__ . '/../includes/navbar.php';
     <div class="container">
       <h2 class="mb-4 mb-lg-5">New Arrivals and Best Sellers</h2>
       <div class="row g-4">
-        <?php foreach ($bestSellerCards as $card): ?>
+        <?php foreach ($bestSellerCards as $bean): ?>
           <div class="col-12 col-md-6 col-xl-4">
-            <article class="ah-bean-card h-100 position-relative">
-              <span class="badge badge-sage ah-roast-badge"><?php echo htmlspecialchars($card['roast'], ENT_QUOTES, 'UTF-8'); ?></span>
-              <img src="<?php echo htmlspecialchars($card['image'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($card['name'], ENT_QUOTES, 'UTF-8'); ?>" class="img-fluid w-100 ah-bean-image">
-              <div class="d-flex justify-content-between align-items-start mt-3">
-                <div>
-                  <h3 class="ah-card-title mb-1"><?php echo htmlspecialchars($card['name'], ENT_QUOTES, 'UTF-8'); ?></h3>
-                  <p class="ah-card-subtitle mb-0"><?php echo htmlspecialchars($card['origin'], ENT_QUOTES, 'UTF-8'); ?></p>
-                </div>
-                <p class="ah-card-price mb-0"><?php echo htmlspecialchars($card['price'], ENT_QUOTES, 'UTF-8'); ?></p>
-              </div>
-              <div class="d-flex flex-wrap gap-2 mt-3">
-                <span class="ah-flavour-tag">Add</span>
-                <span class="ah-flavour-tag">Add</span>
-                <span class="ah-flavour-tag">Add</span>
-              </div>
-              <div class="d-flex justify-content-end mt-3">
-                <a href="shop-coffee.php" class="btn btn-primary btn-sm ah-add-btn">+ Add</a>
-              </div>
-            </article>
+            <?php
+            $bean['cta_label'] = '+ Add';
+            include __DIR__ . '/../includes/bean-card.php';
+            ?>
           </div>
         <?php endforeach; ?>
       </div>
