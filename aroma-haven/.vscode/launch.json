@@ -15,7 +15,7 @@
             "localhost:0"
         ],
         "program": "",
-        "cwd": "${workspaceRoot}",
+        "cwd": "${workspaceRoot}/aroma-haven/public",
         "port": 9003,
         "serverReadyAction": {
             "pattern": "Development Server \\(http://localhost:([0-9]+)\\) started",

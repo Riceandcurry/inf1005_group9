@@ -1,3 +1,7 @@
+
+
+
+
 <nav class="navbar navbar-expand-lg ah-navbar py-0">
   <div class="container-fluid px-0">
     <a class="navbar-brand d-flex flex-column align-items-center justify-content-center ah-brand m-0" href="index.php">
@@ -14,7 +18,14 @@
         <li class="nav-item"><a class="nav-link ah-nav-link" href="about-us.php">Our Story</a></li>
         <li class="nav-item"><a class="nav-link ah-nav-link" href="about-us.php">Contact Us</a></li>
       </ul>
-      <a href="register.php" class="btn btn-primary ah-cta-nav mb-3 mb-lg-0">To Oasis</a>
+      <div class="d-flex align-items-center gap-4 mb-3 mb-lg-0">
+        <a href="cart.php" class="ah-nav-icon" data-cart-trigger title="Open cart">
+          <img src="images/assets/shopping-bag.png" alt="Cart" style="width:36px;height:36px;object-fit:contain;">
+        </a>
+        <a href="login.php" class="ah-nav-icon" title="Login">
+          <img src="images/assets/user.png" alt="Login" style="width:36px;height:36px;object-fit:contain;">
+        </a>
+      </div>
     </div>
   </div>
 </nav>

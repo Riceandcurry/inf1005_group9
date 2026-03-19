@@ -101,16 +101,20 @@ h6,
 /* 5. BOOTSTRAP COMPONENT OVERRIDES */
 
 /* Buttons (Forcing the Pill Shape and Typography) */
-.btn-primary {
-  background-color: var(--ah-terracotta);
-  border-color: var(--ah-terracotta);
-  color: var(--ah-oat);
+.btn-primary,
+.btn-outline-primary {
   border-radius: 999px; /* The Pill Shape */
   font-weight: 600;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0.75rem 1.75rem;
+}
+
+.btn-primary {
+  background-color: var(--ah-terracotta);
+  border-color: var(--ah-terracotta);
+  color: var(--ah-oat);
   box-shadow: 0px 4px 12px rgba(193, 92, 61, 0.2);
   transition: all 0.3s ease;
 }
@@ -128,12 +132,6 @@ h6,
 .btn-outline-primary {
   color: var(--ah-terracotta);
   border-color: var(--ah-terracotta);
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.75rem 1.75rem;
 }
 
 .btn-outline-primary:hover {
@@ -246,15 +244,8 @@ h6,
   gap: 1rem;
   padding: 1.75rem;
   min-height: 420px;
-  background-color: var(--ah-steamed);
-  box-shadow: 0px 4px 12px rgba(42, 32, 28, 0.04);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   align-items: center;
-}
-
-.products-grid .card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0px 12px 24px rgba(42, 32, 28, 0.08);
 }
 
 .products-grid .card img {
@@ -366,7 +357,7 @@ h6,
 }
 
 .ah-feature-text {
-  font-family: "Playfair Display", serif;
+  font-family: var(--ah-font-serif);
   font-size: 1rem;
   line-height: 1.5;
   letter-spacing: 0.01em;
@@ -394,7 +385,7 @@ h6,
 }
 
 .ah-card-title {
-  font-family: "Playfair Display", serif;
+  font-family: var(--ah-font-serif);
   font-size: 1.5rem;
   line-height: 1.4;
   color: var(--ah-espresso);
@@ -407,7 +398,7 @@ h6,
 }
 
 .ah-card-price {
-  font-family: "Playfair Display", serif;
+  font-family: var(--ah-font-serif);
   font-size: 1.35rem;
   line-height: 1.5;
   color: var(--ah-espresso);
@@ -440,7 +431,7 @@ h6,
 }
 
 .ah-guide-title {
-  font-family: "Playfair Display", serif;
+  font-family: var(--ah-font-serif);
   font-size: 1.25rem;
   line-height: 1.35;
   color: var(--ah-espresso);
@@ -563,13 +554,13 @@ h6,
 }
 
 .ah-login-overlay-text h1 {
-  font-family: "Playfair Display", serif;
+  font-family: var(--ah-font-serif);
   color: var(--ah-oat);
   font-size: clamp(2rem, 4vw, 3.25rem);
 }
 
 .ah-login-overlay-text p {
-  font-family: "Playfair Display", serif;
+  font-family: var(--ah-font-serif);
   font-weight: 600;
   line-height: 1.4;
   font-size: clamp(1rem, 2vw, 1.45rem);
@@ -654,6 +645,262 @@ h6,
 .ah-login-register-note a:hover {
   color: var(--ah-terracotta-hover);
   text-decoration: underline;
+}
+
+/* =========================================================================
+   8. CART DRAWER
+   Slide-out panel triggered from cart.php
+   ========================================================================= */
+
+/* Backdrop */
+.ah-cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 32, 28, 0.45);
+  z-index: 1040;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s ease;
+}
+.ah-cart-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Drawer panel */
+.ah-cart-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(440px, 100vw);
+  height: 100dvh;
+  background-color: var(--ah-oat);
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.ah-cart-drawer.open {
+  transform: translateX(0);
+}
+
+/* Prevent body scroll while drawer is open */
+body.ah-cart-open {
+  overflow: hidden;
+}
+
+/* Header row */
+.ah-cart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  flex-shrink: 0;
+}
+.ah-cart-title {
+  font-family: var(--ah-font-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--ah-espresso);
+}
+.ah-cart-close {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  color: var(--ah-espresso);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+.ah-cart-close:hover {
+  color: var(--ah-terracotta);
+}
+
+/* Divider line below header */
+.ah-cart-divider {
+  height: 1px;
+  background-color: rgba(42, 32, 28, 0.1);
+  flex-shrink: 0;
+}
+
+/* Empty-state body */
+.ah-cart-body {
+  padding: 2.25rem 1.5rem 1.25rem;
+}
+.ah-cart-empty-icon {
+  color: var(--ah-espresso);
+  width: 48px;
+  height: 48px;
+}
+.ah-cart-empty-title {
+  font-family: var(--ah-font-serif);
+  font-size: 1.2rem;
+  color: var(--ah-espresso);
+  margin-bottom: 0.35rem;
+}
+.ah-cart-empty-sub {
+  font-size: 0.78rem;
+  color: var(--ah-espresso);
+  opacity: 0.75;
+  margin-bottom: 0;
+}
+
+/* Thin separator */
+.ah-cart-sep {
+  border: none;
+  border-top: 1px solid rgba(42, 32, 28, 0.12);
+  margin: 0 1.5rem 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Recommendation label */
+.ah-cart-rec-label {
+  padding: 0.5rem 1.5rem 0.75rem;
+  font-size: 0.78rem;
+  color: var(--ah-espresso);
+  flex-shrink: 0;
+}
+
+/* Recommendation grid */
+.ah-cart-recs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding: 0 1rem 0.5rem;
+}
+.ah-cart-rec-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* Card image */
+.ah-cart-rec-img-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.ah-cart-rec-img-wrap img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  display: block;
+}
+
+/* Roast badge */
+.ah-cart-rec-roast {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background-color: var(--ah-sage);
+  color: var(--ah-oat);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.45rem;
+  border: 0.5px solid var(--ah-espresso);
+}
+
+/* Name / price row */
+.ah-cart-rec-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+.ah-cart-rec-name,
+.ah-cart-rec-price {
+  font-family: var(--ah-font-serif);
+  font-size: 0.82rem;
+  color: var(--ah-espresso);
+}
+.ah-cart-rec-name {
+  line-height: 1.4;
+}
+.ah-cart-rec-origin {
+  font-size: 0.68rem;
+  color: var(--ah-espresso);
+  opacity: 0.7;
+}
+.ah-cart-rec-price {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Flavour tags */
+.ah-cart-rec-tags {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.ah-cart-rec-tag {
+  border: 1px solid var(--ah-espresso);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.35rem;
+  color: var(--ah-espresso);
+}
+
+/* Add-to-cart button */
+.ah-cart-rec-add-btn {
+  width: 100%;
+  background-color: var(--ah-terracotta);
+  color: var(--ah-espresso);
+  border: none;
+  padding: 0.42rem 0.5rem;
+  font-family: var(--ah-font-serif);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.ah-cart-rec-add-btn:hover {
+  background-color: var(--ah-terracotta-hover);
+  color: var(--ah-oat);
+}
+
+/* Footer — Return to shop */
+.ah-cart-footer {
+  margin-top: auto;
+  padding: 1rem 1.5rem 2rem;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ah-cart-return-btn {
+  display: inline-block;
+  background-color: var(--ah-terracotta);
+  color: var(--ah-oat);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.65rem 2.75rem;
+  border-radius: 0;
+  transition: background-color 0.2s ease;
+}
+.ah-cart-return-btn:hover {
+  background-color: var(--ah-terracotta-hover);
+  color: var(--ah-oat);
+}
+
+/* Mobile tweak */
+@media (max-width: 480px) {
+  .ah-cart-drawer {
+    width: 100vw;
+  }
+  .ah-cart-recs {
+    grid-template-columns: 1fr 1fr;
+    padding: 0 0.75rem 0.5rem;
+  }
 }
 
 @media (max-width: 991.98px) {
@@ -768,6 +1015,134 @@ h6,
     font-size: 1.2rem;
   }
 }
+
+/* ============================================================
+   9. CART ITEMS (filled-cart state)
+   ============================================================ */
+
+.ah-cart-items {
+  padding: 0.75rem 1.5rem 0.25rem;
+}
+
+.ah-cart-item {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+}
+
+.ah-cart-item-img {
+  width: 90px;
+  min-width: 90px;
+  height: 105px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.ah-cart-item-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ah-cart-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.ah-cart-item-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ah-espresso);
+}
+
+.ah-cart-item-origin {
+  font-size: 0.76rem;
+  color: var(--ah-cortado);
+}
+
+.ah-cart-item-price {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ah-espresso);
+  white-space: nowrap;
+}
+
+.ah-cart-item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.ah-cart-item-tag {
+  border: 1px solid var(--ah-cortado);
+  color: var(--ah-cortado);
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  letter-spacing: 0.02em;
+}
+
+.ah-cart-qty {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
+}
+
+.ah-cart-qty-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ah-espresso);
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ah-espresso);
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ah-cart-qty-btn:hover {
+  background: var(--ah-espresso);
+  color: var(--ah-oat);
+}
+
+.ah-cart-qty-num {
+  font-size: 0.95rem;
+  min-width: 1.25rem;
+  text-align: center;
+  color: var(--ah-espresso);
+}
+
+.ah-cart-checkout-wrap {
+  padding: 0.25rem 1.5rem 1rem;
+}
+
+.ah-cart-checkout-btn {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: var(--ah-terracotta);
+  color: var(--ah-oat);
+  border: none;
+  letter-spacing: 0.1em;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease;
+}
+
+.ah-cart-checkout-btn:hover {
+  background: var(--ah-terracotta-hover);
+}
+
+
 
 
 
