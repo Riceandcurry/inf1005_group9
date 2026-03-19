@@ -1267,3 +1267,415 @@ body.ah-cart-open {
 
 
 
+
+/* 8. SHOP PAGE */
+.ah-shop-main {
+  background-color: var(--ah-oat);
+}
+
+.ah-shop-header {
+  width: 100%;
+}
+
+.ah-shop-title {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2rem, 4vw, 2.25rem);
+  line-height: 1.3;
+  color: var(--ah-espresso);
+}
+
+.ah-filter-btn {
+  min-width: 130px;
+  border: 1px solid var(--ah-espresso);
+  background: transparent;
+  color: var(--ah-espresso);
+  padding: 0.7rem 1rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ah-filter-btn:hover {
+  background-color: var(--ah-steamed);
+}
+
+@media (max-width: 767.98px) {
+  .ah-shop-title {
+    font-size: 1.9rem;
+  }
+
+  .ah-filter-btn {
+    width: fit-content;
+  }
+}
+
+.ah-bean-card-link {
+  color: inherit;
+}
+
+.ah-bean-card-link:hover {
+  color: inherit;
+}
+
+/* 9. COFFEE PRODUCT PAGE */
+.ah-coffee-product-page {
+  background-color: var(--ah-oat);
+}
+
+.ah-coffee-breadcrumb-wrap {
+  padding-top: 2rem;
+  padding-bottom: 4.5rem;
+}
+
+.ah-coffee-breadcrumb {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ah-cortado);
+  text-decoration: none;
+}
+
+.ah-coffee-breadcrumb:hover {
+  color: var(--ah-espresso);
+}
+
+.ah-coffee-bean-section {
+  padding-bottom: 7.5rem;
+}
+
+.ah-coffee-bean-row {
+  max-width: 1080px;
+}
+
+.ah-coffee-image-wrap {
+  width: min(420px, 100%);
+  height: 560px;
+  overflow: hidden;
+}
+
+.ah-coffee-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.ah-coffee-details {
+  width: min(410px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ah-coffee-roast {
+  align-self: flex-start;
+}
+
+.ah-coffee-title {
+  font-family: var(--ah-font-serif);
+  font-weight: 500;
+  font-size: clamp(2.2rem, 4.6vw, 3rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ah-espresso);
+}
+
+.ah-coffee-origin {
+  font-size: 0.875rem;
+  color: var(--ah-cortado);
+}
+
+.ah-coffee-price {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ah-espresso);
+}
+
+.ah-coffee-stars {
+  color: var(--ah-terracotta);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  line-height: 1;
+}
+
+.ah-coffee-review-count {
+  font-size: 1rem;
+  color: var(--ah-cortado);
+}
+
+.ah-coffee-description {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ah-cortado);
+}
+
+.ah-grind-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.ah-grind-option {
+  background: transparent;
+  border: 1px solid var(--ah-espresso);
+  border-radius: 0.75rem;
+  color: var(--ah-cortado);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.ah-grind-option.is-active {
+  background-color: var(--ah-steamed);
+  border-color: var(--ah-terracotta);
+  color: var(--ah-terracotta);
+}
+
+.ah-coffee-purchase-row {
+  width: 100%;
+}
+
+.ah-qty-pill {
+  min-width: 115px;
+  border: 1px solid var(--ah-cortado);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  padding: 0.4rem 0.7rem;
+  color: var(--ah-espresso);
+}
+
+.ah-qty-pill button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  line-height: 1;
+  padding: 0;
+}
+
+.ah-coffee-add-btn {
+  flex: 1;
+}
+
+.ah-coffee-reviews-section {
+  padding-top: 2rem;
+  padding-bottom: 7.5rem;
+}
+
+.ah-coffee-reviews-title {
+  font-family: var(--ah-font-serif);
+  font-size: clamp(2rem, 3.5vw, 2.25rem);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ah-espresso);
+}
+
+.ah-review-card {
+  background-color: var(--ah-steamed);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.ah-review-product {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ah-espresso);
+}
+
+.ah-review-copy {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ah-cortado);
+}
+
+.ah-review-author {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ah-espresso);
+}
+
+.ah-review-date {
+  font-size: 1rem;
+  color: var(--ah-espresso);
+}
+
+@media (max-width: 991.98px) {
+  .ah-coffee-breadcrumb-wrap {
+    padding-top: 1.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .ah-coffee-bean-section {
+    padding-bottom: 4.5rem;
+  }
+
+  .ah-coffee-image-wrap {
+    width: min(560px, 100%);
+    height: 500px;
+  }
+
+  .ah-coffee-details {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .ah-coffee-reviews-section {
+    padding-top: 1rem;
+    padding-bottom: 4.5rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ah-coffee-breadcrumb-wrap {
+    padding-bottom: 2rem;
+  }
+
+  .ah-coffee-image-wrap {
+    height: 400px;
+  }
+
+  .ah-coffee-review-count {
+    font-size: 0.92rem;
+  }
+
+  .ah-coffee-purchase-row {
+    flex-wrap: wrap;
+  }
+
+  .ah-qty-pill,
+  .ah-coffee-add-btn {
+    width: 100%;
+  }
+
+  .ah-coffee-reviews-title {
+    font-size: 1.9rem;
+  }
+}
+
+/* 10. BREW GUIDES PAGE */
+.ah-brew-methods-page {
+  background-color: var(--ah-oat);
+}
+
+.ah-brew-header-kicker {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ah-cortado);
+}
+
+.ah-brew-header-title {
+  max-width: 780px;
+  margin-left: auto;
+  margin-right: auto;
+  font-family: var(--ah-font-serif);
+  font-weight: 500;
+  font-size: clamp(1.4rem, 2.7vw, 2.1rem);
+  line-height: 1.25;
+  color: var(--ah-espresso);
+}
+
+.ah-method-card-link {
+  display: block;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ah-method-card-link:hover {
+  color: inherit;
+}
+
+.ah-method-card {
+  background-color: var(--ah-steamed);
+  padding: 1.05rem 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ah-method-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0px 8px 20px rgba(42, 32, 28, 0.08);
+}
+
+.ah-method-title {
+  margin: 0;
+  font-family: var(--bs-font-sans-serif);
+  font-size: clamp(1.15rem, 1.8vw, 1.55rem);
+  line-height: 1.18;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.ah-method-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: #000;
+}
+
+.ah-method-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: center;
+}
+
+.ah-method-profile {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: #000;
+}
+
+.ah-method-duration {
+  font-family: var(--bs-font-sans-serif);
+  font-size: clamp(1.05rem, 1.45vw, 1.4rem);
+  line-height: 1.2;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #000;
+}
+
+@media (max-width: 1199.98px) {
+  .ah-method-title {
+    font-size: 1.3rem;
+  }
+
+  .ah-method-duration {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ah-brew-header-title {
+    font-size: 1.3rem;
+  }
+
+  .ah-method-card {
+    padding: 0.95rem 0.9rem 1rem;
+    gap: 0.65rem;
+  }
+
+  .ah-method-title {
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+  }
+
+  .ah-method-duration {
+    font-size: 1rem;
+  }
+}
