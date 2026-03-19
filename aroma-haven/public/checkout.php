@@ -120,6 +120,44 @@ include __DIR__ . '/../includes/navbar.php';
           </label>
         </div>
 
+        <!-- Credit Card fields panel -->
+        <div class="ah-cc-fields" id="ahCreditCardFields">
+          <div class="ah-checkout-field">
+            <label for="chkCardNumber">Card Number</label>
+            <input type="text" id="chkCardNumber" name="card_number" placeholder="1234 5678 9012 3456"
+                   inputmode="numeric" maxlength="19" autocomplete="cc-number">
+          </div>
+          <div class="ah-checkout-field">
+            <label for="chkCardName">Cardholder Name</label>
+            <input type="text" id="chkCardName" name="card_name" autocomplete="cc-name">
+          </div>
+          <div class="row g-4">
+            <div class="col-12 col-sm-6">
+              <div class="ah-checkout-field">
+                <label for="chkExpiry">Expiry Date</label>
+                <input type="text" id="chkExpiry" name="expiry" placeholder="MM/YY"
+                       inputmode="numeric" maxlength="5" autocomplete="cc-exp">
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="ah-checkout-field">
+                <label for="chkCvv">CVV</label>
+                <input type="text" id="chkCvv" name="cvv" placeholder="123"
+                       inputmode="numeric" maxlength="4" autocomplete="cc-csc">
+              </div>
+            </div>
+          </div>
+          <p class="ah-checkout-secure-note mb-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"
+                 stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                 viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Your payment information is secure and encrypted
+          </p>
+        </div>
+
         <!-- PayPal notice panel -->
         <div class="ah-paypal-notice" id="ahPaypalNotice" hidden>
           <p class="mb-2">You <em>will</em> be redirected to PayPal to complete your purchase securely.</p>
@@ -139,16 +177,6 @@ include __DIR__ . '/../includes/navbar.php';
           <label for="chkPaypalEmail">PayPal Email (Optional)</label>
           <input type="email" id="chkPaypalEmail" name="paypal_email" placeholder="your@email.com" autocomplete="email">
         </div>
-
-        <p class="ah-checkout-secure-note">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"
-               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-               viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          Your payment information is secure and encrypted
-        </p>
 
         <!-- Actions -->
         <div class="ah-checkout-actions">
@@ -209,6 +237,7 @@ include __DIR__ . '/../includes/navbar.php';
   document.querySelectorAll('input[name="payment"]').forEach(function (radio) {
     radio.addEventListener('change', function () {
       var isPaypal = this.value === 'paypal';
+      document.getElementById('ahCreditCardFields').hidden = isPaypal;
       document.getElementById('ahPaypalNotice').hidden    = !isPaypal;
       document.getElementById('ahPaypalEmailWrap').hidden = !isPaypal;
     });
@@ -221,9 +250,12 @@ include __DIR__ . '/../includes/navbar.php';
       this.classList.add('was-validated');
       return;
     }
-    alert('Order placed! Thank you for your purchase.');
+    /* Snapshot the cart into sessionStorage so confirmation.php can display it */
+    var cartRaw = localStorage.getItem(CART_KEY);
+    sessionStorage.setItem('ah_confirm_order', cartRaw || '{}');
+    sessionStorage.setItem('ah_confirm_num', Date.now().toString(36).toUpperCase().slice(-6));
     localStorage.removeItem(CART_KEY);
-    window.location.href = 'index.php';
+    window.location.href = 'confirmation.php';
   });
 
   renderSummary();

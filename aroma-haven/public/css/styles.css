@@ -1634,6 +1634,22 @@ body.ah-cart-open {
 }
 
 /* Security note */
+/* Credit card fields panel */
+.ah-cc-fields {
+  border: 1.5px solid var(--ah-terracotta);
+  border-radius: 0.5rem;
+  background: rgba(193, 92, 61, 0.04);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ah-cc-fields[hidden] {
+  display: none;
+}
+
 .ah-checkout-secure-note {
   display: flex;
   align-items: center;
@@ -1946,5 +1962,169 @@ body.ah-cart-open {
 
   .ah-method-duration {
     font-size: 1rem;
+  }
+}
+
+/* ============================================================
+   11. CONFIRMATION PAGE
+   ============================================================ */
+
+.ah-confirm-main {
+  min-height: 70vh;
+}
+
+.ah-confirm-wrap {
+  max-width: 640px;
+}
+
+/* Hero checkmark */
+.ah-confirm-hero {
+  margin-bottom: 2.5rem;
+}
+
+.ah-confirm-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--ah-sage);
+  color: var(--ah-oat);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ah-confirm-title {
+  font-family: var(--ah-font-serif);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 500;
+  color: var(--ah-espresso);
+  margin-bottom: 0.4rem;
+}
+
+.ah-confirm-subtitle {
+  color: var(--ah-cortado);
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.ah-confirm-order-num {
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  color: var(--ah-cortado);
+  margin-bottom: 0;
+}
+
+/* Totals */
+.ah-confirm-totals {
+  border-top: 1px solid rgba(42, 32, 28, 0.1);
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ah-confirm-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  color: var(--ah-espresso);
+}
+
+.ah-confirm-total-final {
+  font-family: var(--ah-font-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  border-top: 1px solid rgba(42, 32, 28, 0.14);
+  padding-top: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+/* What's next steps */
+.ah-confirm-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ah-confirm-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.ah-confirm-step-num {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ah-terracotta);
+  color: var(--ah-oat);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ah-confirm-step-title {
+  font-family: var(--ah-font-serif);
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--ah-espresso);
+}
+
+.ah-confirm-step-desc {
+  font-size: 0.8rem;
+  color: var(--ah-cortado);
+}
+
+/* Action buttons */
+.ah-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 4rem;
+}
+
+.ah-confirm-shop-btn,
+.ah-confirm-home-btn {
+  display: block;
+  text-align: center;
+  padding: 0.9rem 1rem;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ah-confirm-shop-btn {
+  background: var(--ah-terracotta);
+  color: var(--ah-oat);
+}
+
+.ah-confirm-shop-btn:hover {
+  background: var(--ah-terracotta-hover);
+  color: var(--ah-oat);
+}
+
+.ah-confirm-home-btn {
+  background: transparent;
+  color: var(--ah-espresso);
+  border: 1.5px solid var(--ah-espresso);
+}
+
+.ah-confirm-home-btn:hover {
+  background: var(--ah-espresso);
+  color: var(--ah-oat);
+}
+
+@media (max-width: 575.98px) {
+  .ah-confirm-actions {
+    grid-template-columns: 1fr;
   }
 }
