@@ -243,25 +243,87 @@ h6,
   font-size: clamp(1.125rem, 3vw, 1.75rem);
 }
 
+.quiz-buttons{
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  justify-self: center;
+}
+
 .quiz-grid{
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(4, minmax(180px, 240px));
+  justify-content: center;
+  gap: 1rem;
   margin: 0 auto;
-  max-width: 1200px;
+  max-width: 1040px;
   padding: 3rem 1.5rem;
 }
 
 .quiz-grid .card {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1.75rem;
-  min-height: 420px;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  min-height: 0;
   background-color: var(--ah-steamed);
   box-shadow: 0px 4px 12px rgba(42, 32, 28, 0.04);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
+
+.personality-quiz.result-step .quiz-grid {
+  grid-template-columns: repeat(3, minmax(180px, 240px));
+  max-width: 760px;
+}
+
+.personality-quiz.intensity-step .quiz-grid {
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  max-width: 780px;
+}
+
+.personality-quiz.intensity-step .quiz-grid {
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  max-width: 900px;
+}
+
+.personality-quiz.intensity-step .quiz-grid .card {
+  background: var(--ah-sage);
+  border-radius: 14px;
+  padding: 1.25rem;
+  min-height: 260px;
+}
+
+.personality-quiz.intensity-step .quiz-grid .card h3 {
+  color: var(--ah-oat);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.personality-quiz.intensity-step .quiz-grid .card .ah-guide-image {
+  width: 200px;
+  height: 200px;
+  max-width: 300px;
+  object-fit: contain;
+  margin-bottom: 0.2rem;
+}
+
+.quiz-grid .card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0px 12px 24px rgba(42, 32, 28, 0.08);
+}
+
+.quiz-grid .result-card {
+  background-color: var(--ah-sage);
+  text-decoration-style: var(--ah-oat);
+}
+.quiz-grid .result-card {
+  background-color: var(--ah-sage);
+  text-decoration-style: var(--ah-oat);
+  
+}
+
 
 
 .products-grid {
@@ -471,7 +533,18 @@ h6,
   object-fit: cover;
   flex-shrink: 0;
 }
+.quiz-card .ah-guide-image {
+  width:80%;
+  max-width:90px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0.25rem;
+}
 
+.quiz-card .ah-guide-title {
+  margin: 0;
+  font-size: 1.75rem;
+}
 .ah-guide-title {
   font-family: "Playfair Display", serif;
   font-size: 1.25rem;
