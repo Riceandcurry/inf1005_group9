@@ -13,7 +13,7 @@ function shutdown_debug() {
 }
 register_shutdown_function('shutdown_debug');
 require_once __DIR__ . '/../backend/register.php';
-//require_once __DIR__ . '/../backend/login_process.php';
+require_once __DIR__ . '/../backend/login_process.php';
 session_start();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_REQUEST['action'] ?? '';
@@ -43,7 +43,15 @@ switch ($method) {
     case 'GET':
         switch($action){
             case 'login':
-                break;
+                $result = login_process($_POST);
+                if(empty($result)){
+                    header("Location: dashboard.php");
+                    exit;
+                } else {
+                    $_SESSION['error'] = $result;
+                    header("Location: login.php");
+                    exit;
+                }                                
                
         }        
     default:
