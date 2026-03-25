@@ -9,8 +9,15 @@
         $pass = $_ENV['DB_PASS'];
         $db   = $_ENV['DB_NAME'];
         $port = $_ENV['DB_PORT'];
-        $conn = new mysqli($host, $user, $pass, $db, $port);
-        return $conn;
+
+        $dsn = "mysql:host=$host;dbname=$db;port=$port;charset=utf8mb4";
+        try {
+            $conn = new PDO($dsn, $user, $pass);
+            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            return $conn;
+        } catch (PDOException $e) {
+            die("DB Connection failed: " . $e->getMessage());
+        }
     }
     function sanitize_input($data){
         $data = trim($data);

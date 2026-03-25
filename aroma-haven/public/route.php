@@ -1,4 +1,17 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+function shutdown_debug() {
+    $error = error_get_last();
+    if ($error !== NULL) {
+        echo "<pre>";
+        print_r($error);
+        echo "</pre>";
+    }
+}
+register_shutdown_function('shutdown_debug');
 require_once __DIR__ . '/../backend/register.php';
 //require_once __DIR__ . '/../backend/login_process.php';
 session_start();
