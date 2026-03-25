@@ -3,8 +3,8 @@
     <div class="text-center mb-4">
       <h2 class="ah-footer-title mb-0 text-oat">Aroma Haven</h2>
     </div>
-    <div class="row g-4 align-items-start">
-      <div class="col-6 col-md-3">
+    <div class="row g-4 align-items-start justify-content-center justify-content-lg-between">
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
         <p class="text-overline text-oat mb-2">About us</p>
         <ul class="list-unstyled ah-footer-links mb-0">
           <li><a href="about-us.php#about-aroma-haven">About Aroma Haven</a></li>
@@ -12,27 +12,28 @@
           <li><a href="about-us.php#ethos">Our ethos</a></li>
         </ul>
       </div>
-      <div class="col-6 col-md-3">
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
         <p class="text-overline text-oat mb-2">Contact us</p>
         <ul class="list-unstyled ah-footer-links mb-0">
-          <li><a href="about-us.php">Book a consultation</a></li>
-          <li><a href="about-us.php">Submit enquiries</a></li>
+          <li><a href="contact-us.php">Book a consultation</a></li>
+          <li><a href="contact-us.php#contact-form">Submit enquiries</a></li>
         </ul>
       </div>
-      <div class="col-6 col-md-2">
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
         <p class="text-overline text-oat mb-2">Join Oasis</p>
         <ul class="list-unstyled ah-footer-links mb-0">
           <li><a href="login.php">Login</a></li>
           <li><a href="register.php">Register</a></li>
         </ul>
       </div>
-      <div class="col-12 col-md-4">
+      <div class="col-12 col-lg-6 ah-footer-news-col">
         <p class="text-overline text-oat mb-2">Subscribe and stay updated</p>
         <p class="ah-footer-copy mb-3">Join our email newsletter for exclusive offers, events and first access to our most exciting releases. Plus, a complimentary free shipping on your first order.</p>
-        <form class="ah-newsletter">
+        <form class="ah-newsletter" action="contact-us.php#contact-form" method="get">
           <label for="newsletter-email" class="form-label mb-2 text-oat">enter your email address</label>
-          <input id="newsletter-email" class="form-control ah-newsletter-input" type="email" placeholder="">
-          <p class="mb-0 mt-2"><a href="#" class="ah-footer-policy">Privacy Policy &amp; Terms</a></p>
+          <input id="newsletter-email" name="email" class="form-control ah-newsletter-input" type="email" placeholder="name@example.com" autocomplete="email" required>
+          <button type="submit" class="btn btn-outline-primary mt-3">Subscribe</button>
+          <p class="mb-0 mt-2"><a href="contact-us.php#contact-form" class="ah-footer-policy">Privacy Policy &amp; Terms</a></p>
         </form>
       </div>
     </div>

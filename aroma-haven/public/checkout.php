@@ -180,7 +180,7 @@ include __DIR__ . '/../includes/navbar.php';
 
         <!-- Actions -->
         <div class="ah-checkout-actions">
-          <button type="button" class="ah-checkout-back-btn" onclick="window.location.href='shop-coffee.php'">BACK TO SHOP</button>
+          <a href="shop-coffee.php" class="ah-checkout-back-btn">BACK TO SHOP</a>
           <button type="submit" class="ah-checkout-place-btn">PLACE ORDER</button>
         </div>
 

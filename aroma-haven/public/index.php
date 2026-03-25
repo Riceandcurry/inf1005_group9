@@ -1,106 +1,132 @@
 <?php
 $pageTitle = 'Aroma Haven | Home';
+$bodyClass = 'ah-shell-xr';
 
 require_once __DIR__ . '/../includes/bean-catalog.php';
-$bestSellerCards = ah_get_home_beans();
+$featuredBeans = array_slice(array_values(ah_get_bean_catalog()), 0, 6);
 
-$featureTags = [
-  ['label' => 'Meticulous Quality', 'icon' => './images/assets/achievement.png'],
-  ['label' => 'Unpretentious', 'icon' => './images/assets/theatre.png'],
-  ['label' => 'Ethically Sourced', 'icon' => './images/assets/tag.png'],
-  ['label' => 'By coffee lovers', 'icon' => './images/assets/love.png'],
-];
-
-$brewGuides = [
-  [
-    'title' => 'French Press',
-    'text' => 'Forgiving, rich, and beginner-friendly. Great first method.',
-    'image' => './images/assets/french_press_brew.jpg'
-  ],
-  [
-    'title' => 'Pour Over',
-    'text' => 'Clean and sweet cup with easy timing prompts',
-    'image' => './images/assets/pour_over_brew.jpg'
-  ],
+$methodPillars = [
+  ['title' => 'Source', 'copy' => 'Micro-lot relationships that prioritize traceability and seasonal quality.'],
+  ['title' => 'Roast', 'copy' => 'Profiles tuned for clarity and sweetness, not noise and bitterness.'],
+  ['title' => 'Guide', 'copy' => 'Simple, precise brew paths for beginners and enthusiasts alike.'],
 ];
 
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/navbar.php';
 ?>
 
-<main>
-  <section class="ah-hero">
-    <div class="container-fluid px-0">
-      <div class="row g-0 align-items-stretch">
-        <div class="col-lg-6">
-          <video class="w-100 ah-hero-image" autoplay muted loop playsinline>
-            <source src="images/assets/golden_brew.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-        </div>
-        <div class="col-lg-6 d-flex align-items-center bg-oat">
-          <div class="ah-hero-content mx-auto">
-            <h1 class="ah-display mb-3 mb-md-4">Your 10 minute oasis.</h1>
-            <p class="ah-lead mb-4 mb-md-5">We source the finest beans and meticulously roast them so you can slow down, breathe, and enjoy a perfect cup right in your kitchen. No snobbery. Just great coffee.</p>
-            <a href="shop-coffee.php" class="btn btn-outline-primary d-table mx-auto">To Shop</a>
-          </div>
+<main id="main-content" class="ah-xr-home">
+  <section id="chapter-arrival" class="ah-xr-chapter ah-xr-hero">
+    <img src="./images/assets/banner-cafe.jpg" alt="" class="ah-xr-hero-fallback" aria-hidden="true">
+    <video class="ah-xr-hero-video" autoplay muted loop playsinline aria-hidden="true">
+      <source src="images/assets/golden_brew.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="container position-relative">
+      <div class="ah-xr-hero-content">
+        <p class="ah-xr-kicker mb-2">Aroma Haven</p>
+        <h1 class="ah-xr-title mb-3">Bring better coffee home, one intentional cup at a time.</h1>
+        <p class="ah-xr-lead mb-4">Freshly roasted beans, clear brew guidance, and flavor profiles you can actually understand.</p>
+        <div class="ah-xr-hero-actions d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+          <a href="shop-coffee.php" class="btn btn-primary">Shop Coffee</a>
+          <a href="#chapter-problem" class="btn btn-outline-light ah-xr-btn-ghost">Learn The Ritual</a>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="ah-features bg-steamed">
+  <section id="chapter-problem" class="ah-xr-chapter ah-xr-problem">
     <div class="container">
-      <div class="row justify-content-center g-4 g-md-5">
-        <?php foreach ($featureTags as $tag): ?>
-          <div class="col-6 col-md-3 text-center">
-            <img src="<?php echo htmlspecialchars($tag['icon'], ENT_QUOTES, 'UTF-8'); ?>" alt="" class="ah-feature-icon mb-3">
-            <p class="ah-feature-text mb-0"><?php echo htmlspecialchars($tag['label'], ENT_QUOTES, 'UTF-8'); ?></p>
+      <div class="row g-4 g-lg-5 align-items-center">
+        <div class="col-12 col-lg-6">
+          <p class="ah-xr-kicker mb-2">Why It Matters</p>
+          <h2 class="ah-xr-heading mb-3">Great beans lose their magic when brewing feels confusing.</h2>
+          <p class="mb-4">Most people are forced to choose between confusing coffee jargon and bland convenience. We remove that trade-off so quality feels natural.</p>
+          <ul class="ah-xr-list mb-0">
+            <li>Clear flavor language instead of gatekeeping.</li>
+            <li>Method guidance without unnecessary complexity.</li>
+            <li>A direct path from curiosity to great coffee.</li>
+          </ul>
+        </div>
+        <div class="col-12 col-lg-6">
+          <img src="./images/assets/auth-visual.jpg" alt="Coffee ritual setup" class="ah-xr-problem-image">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="chapter-method" class="ah-xr-chapter ah-xr-method">
+    <div class="container">
+      <header class="mb-4 mb-lg-5">
+        <p class="ah-xr-kicker mb-2">Our Method</p>
+        <h2 class="ah-xr-heading mb-0">Three moves. One better cup.</h2>
+      </header>
+      <div class="row g-4">
+        <?php foreach ($methodPillars as $pillar): ?>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <article class="ah-xr-pillar h-100">
+              <h3 class="mb-2"><?php echo htmlspecialchars($pillar['title'], ENT_QUOTES, 'UTF-8'); ?></h3>
+              <p class="mb-0"><?php echo htmlspecialchars($pillar['copy'], ENT_QUOTES, 'UTF-8'); ?></p>
+            </article>
           </div>
         <?php endforeach; ?>
       </div>
     </div>
   </section>
 
-  <section class="ah-best-sellers py-5 py-lg-6">
+  <section id="chapter-discovery" class="ah-xr-chapter ah-xr-discovery">
     <div class="container">
-      <h2 class="mb-4 mb-lg-5">New Arrivals and Best Sellers</h2>
+      <header class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4 mb-lg-5">
+        <div>
+          <p class="ah-xr-kicker mb-2">Featured Coffee</p>
+          <h2 class="ah-xr-heading mb-0">Choose a bean that matches your mood.</h2>
+        </div>
+        <a href="shop-coffee.php" class="btn btn-outline-primary">Browse Full Collection</a>
+      </header>
+
       <div class="row g-4">
-        <?php foreach ($bestSellerCards as $bean): ?>
-          <div class="col-12 col-md-6 col-xl-4">
+        <?php foreach ($featuredBeans as $bean): ?>
+          <div class="col-12 col-md-6 col-lg-4">
             <?php
-            $bean['cta_label'] = '+ Add';
+            $beanId = isset($bean['id']) ? (string) $bean['id'] : '';
+            $productHref = $beanId !== ''
+              ? 'coffee-product.php?bean=' . rawurlencode($beanId)
+              : 'coffee-product.php';
+            $bean['cta_label'] = 'Open detail';
+            $bean['cta_href'] = $productHref;
             include __DIR__ . '/../includes/bean-card.php';
             ?>
           </div>
         <?php endforeach; ?>
       </div>
-      <div class="text-center mt-4 mt-lg-5">
-        <a href="shop-coffee.php" class="btn btn-primary">To Shop</a>
-      </div>
     </div>
   </section>
 
-  <section class="ah-brew-guides bg-steamed py-5 py-lg-6">
+  <section id="chapter-quiz" class="ah-xr-chapter ah-xr-quiz">
     <div class="container">
-      <h2 class="mb-4 mb-lg-5">Explore Brew Guides</h2>
-      <div class="row g-4 g-lg-5">
-        <?php foreach ($brewGuides as $guide): ?>
-          <div class="col-12 col-lg-6">
-            <article class="d-flex flex-column flex-md-row gap-3 ah-guide-card h-100">
-              <img src="<?php echo htmlspecialchars($guide['image'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($guide['title'], ENT_QUOTES, 'UTF-8'); ?>" class="ah-guide-image">
-              <div class="d-flex flex-column justify-content-center">
-                <h3 class="ah-guide-title mb-2"><?php echo htmlspecialchars($guide['title'], ENT_QUOTES, 'UTF-8'); ?></h3>
-                <p class="ah-guide-copy mb-2"><?php echo htmlspecialchars($guide['text'], ENT_QUOTES, 'UTF-8'); ?></p>
-                <a href="product.php" class="ah-guide-link">Learn More</a>
-              </div>
-            </article>
-          </div>
-        <?php endforeach; ?>
-      </div>
-      <div class="text-center mt-4 mt-lg-5">
-        <a href="product.php" class="btn btn-outline-dark ah-outline-square">Explore Brew Guides</a>
-      </div>
+      <article class="ah-xr-quiz-card text-center">
+        <p class="ah-xr-kicker mb-2">Taste Match</p>
+        <h2 class="ah-xr-heading mb-3">Not sure where to begin? We can map your flavor profile.</h2>
+        <p class="mb-4">Take a quick personality quiz and get an instant coffee direction tailored to your preferences.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          <a href="personality-quiz.php" class="btn btn-primary">Take Personality Quiz</a>
+          <a href="shop-coffee.php" class="btn btn-outline-primary">Shop Directly</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="chapter-close" class="ah-xr-chapter ah-xr-close">
+    <div class="container">
+      <article class="ah-xr-close-card text-center">
+        <p class="ah-xr-kicker mb-2">Start Your Ritual</p>
+        <h2 class="ah-xr-heading mb-3">Build the ritual you want to wake up to.</h2>
+        <p class="mb-4">Start with beans that fit your palate, then refine your method over time with confidence.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          <a href="shop-coffee.php" class="btn btn-primary">Shop Coffee</a>
+          <a href="register.php" class="btn btn-outline-primary">Join Oasis</a>
+        </div>
+      </article>
     </div>
   </section>
 </main>

@@ -1,0 +1,122 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap");
+
+body {
+  font-family: var(--bs-font-sans-serif);
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.display-1,
+.navbar-brand {
+  font-family: var(--ah-font-serif);
+  color: var(--bs-heading-color);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.text-overline {
+  font-size: var(--ah-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ah-espresso);
+}
+
+.badge-sage {
+  background-color: var(--ah-sage);
+  color: var(--ah-oat);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: var(--ah-letter-wide);
+  text-transform: uppercase;
+  padding: 0.35em 0.65em;
+  border-radius: var(--ah-radius-pill);
+}
+
+.bg-oat { background-color: var(--ah-oat) !important; }
+.bg-steamed { background-color: var(--ah-steamed) !important; }
+.bg-terracotta { background-color: var(--ah-terracotta) !important; }
+.bg-espresso { background-color: var(--ah-espresso) !important; }
+
+.text-espresso { color: var(--ah-espresso) !important; }
+.text-cortado { color: var(--ah-cortado) !important; }
+.text-oat { color: var(--ah-oat) !important; }
+
+.py-lg-6 {
+  padding-top: 6rem !important;
+  padding-bottom: 6rem !important;
+}
+
+.btn-primary,
+.btn-outline-primary {
+  border-radius: var(--ah-radius-pill);
+  font-weight: 600;
+  font-size: var(--ah-text-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--ah-letter-wide);
+  padding: var(--ah-space-3) 1.75rem;
+  min-height: var(--ah-touch-target);
+}
+
+.btn-primary {
+  background-color: var(--ah-terracotta);
+  border-color: var(--ah-terracotta);
+  color: var(--ah-oat);
+  box-shadow: var(--ah-shadow-brand);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--ah-terracotta-hover) !important;
+  border-color: var(--ah-terracotta-hover) !important;
+  color: var(--ah-oat) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--ah-shadow-brand-hover);
+}
+
+.btn-outline-primary {
+  color: var(--ah-terracotta);
+  border-color: var(--ah-terracotta);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--ah-steamed);
+  color: var(--ah-terracotta);
+  border-color: var(--ah-terracotta);
+}
+
+.form-control,
+.form-select {
+  background-color: rgba(234, 230, 218, 0.5);
+  border: 1px solid var(--ah-steamed);
+  border-radius: var(--ah-radius-lg);
+  color: var(--ah-espresso);
+  padding: var(--ah-space-3) var(--ah-space-4);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--ah-oat);
+  border-color: var(--ah-terracotta);
+  box-shadow: 0 0 0 0.25rem rgba(193, 92, 61, 0.15);
+  color: var(--ah-espresso);
+}
+
+.card {
+  background-color: var(--ah-steamed);
+  border: none;
+  border-radius: var(--ah-radius-lg);
+  box-shadow: var(--ah-shadow-md);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--ah-shadow-lg);
+}
