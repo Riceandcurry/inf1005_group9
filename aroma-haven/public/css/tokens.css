@@ -1,0 +1,53 @@
+:root {
+  --ah-oat: #f6f4ed;
+  --ah-steamed: #eae6da;
+  --ah-terracotta: #c15c3d;
+  --ah-terracotta-hover: #a64b2f;
+  --ah-espresso: #2a201c;
+  --ah-cortado: #685a55;
+  --ah-sage: #7d8c78;
+
+  --bs-primary: var(--ah-terracotta);
+  --bs-body-bg: var(--ah-oat);
+  --bs-body-color: var(--ah-cortado);
+  --bs-heading-color: var(--ah-espresso);
+
+  --bs-font-sans-serif: "Inter", sans-serif;
+  --ah-font-serif: "Playfair Display", serif;
+
+  --ah-text-xs: 0.75rem;
+  --ah-text-sm: 0.875rem;
+  --ah-text-md: 1rem;
+  --ah-text-lg: 1.125rem;
+
+  --ah-space-1: 0.25rem;
+  --ah-space-2: 0.5rem;
+  --ah-space-3: 0.75rem;
+  --ah-space-4: 1rem;
+  --ah-space-5: 1.25rem;
+  --ah-space-6: 1.5rem;
+  --ah-space-8: 2rem;
+  --ah-space-10: 2.5rem;
+  --ah-space-12: 3rem;
+
+  --ah-radius-xs: 0.25rem;
+  --ah-radius-sm: 0.35rem;
+  --ah-radius-md: 0.45rem;
+  --ah-radius-lg: 0.75rem;
+  --ah-radius-pill: 999px;
+
+  --ah-brand-width: 194px;
+  --ah-brand-min-height: 96px;
+  --ah-touch-target: 42px;
+
+  --ah-border-soft: rgba(42, 32, 28, 0.12);
+  --ah-border-mid: rgba(42, 32, 28, 0.18);
+  --ah-shadow-sm: 0 2px 8px rgba(42, 32, 28, 0.08);
+  --ah-shadow-md: 0 4px 12px rgba(42, 32, 28, 0.06);
+  --ah-shadow-lg: 0 8px 18px rgba(42, 32, 28, 0.1);
+  --ah-shadow-brand: 0 4px 12px rgba(193, 92, 61, 0.2);
+  --ah-shadow-brand-hover: 0 6px 16px rgba(193, 92, 61, 0.3);
+
+  --ah-letter-wide: 0.05em;
+  --ah-letter-wider: 0.08em;
+}

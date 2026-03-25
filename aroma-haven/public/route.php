@@ -37,9 +37,9 @@ switch ($method) {
         $result = "Unsupported HTTP method: $method";
 }
 
-// for Debugging
 if (is_string($result)) {
-    echo $result;
+    http_response_code(400);
+    echo "Request could not be processed.";
 } else {
     header('Content-Type: application/json');
     echo json_encode($result);
