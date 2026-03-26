@@ -2,6 +2,28 @@
 $pageTitle = 'Aroma Haven | Contact Us';
 $bodyClass = 'ah-contact-page';
 
+require_once __DIR__ . '/../backend/contact_process.php';
+
+$contactSuccess = false;
+$contactError   = '';
+$contactSticky  = []; // repopulate fields on error
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $contactError = contact_process($_POST);
+
+    if ($contactError === '') {
+        $contactSuccess = true;
+    } else {
+        // Keep values so the user doesn't have to retype everything
+        $contactSticky = [
+            'name'    => htmlspecialchars($_POST['name']    ?? '', ENT_QUOTES, 'UTF-8'),
+            'email'   => htmlspecialchars($_POST['email']   ?? '', ENT_QUOTES, 'UTF-8'),
+            'topic'   => htmlspecialchars($_POST['topic']   ?? '', ENT_QUOTES, 'UTF-8'),
+            'message' => htmlspecialchars($_POST['message'] ?? '', ENT_QUOTES, 'UTF-8'),
+        ];
+    }
+}
+
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/navbar.php';
 ?>
@@ -60,46 +82,64 @@ include __DIR__ . '/../includes/navbar.php';
         <section id="contact-form" class="ah-contact-form-wrap" aria-labelledby="contact-form-title">
           <p class="ah-contact-kicker mb-2">Message Us</p>
           <h2 id="contact-form-title" class="ah-contact-title mb-2">Send a direct enquiry</h2>
-          <p class="ah-contact-copy mb-4">Frontend-only form for now. We can wire backend submission later.</p>
+          <p class="ah-contact-copy mb-4">We usually respond within one business day.</p>
 
-          <form class="ah-contact-form" action="contact-us.php#contact-form" method="post">
-            <div class="row g-3">
-              <div class="col-12 col-md-6">
-                <label for="contact-name" class="form-label">Full name</label>
-                <input id="contact-name" name="name" type="text" class="form-control" autocomplete="name" required>
+          <?php if ($contactSuccess): ?>
+            <div class="alert alert-success" role="alert">
+              <strong>Message sent!</strong> Thanks for reaching out — we'll get back to you shortly.
+            </div>
+          <?php else: ?>
+
+            <?php if ($contactError !== ''): ?>
+              <div class="alert alert-danger" role="alert">
+                <?php echo $contactError; ?>
               </div>
-              <div class="col-12 col-md-6">
-                <label for="contact-email" class="form-label">Email address</label>
-                <input id="contact-email" name="email" type="email" class="form-control" autocomplete="email" required>
-              </div>
-              <div class="col-12">
-                <label for="contact-topic" class="form-label">Topic</label>
-                <select id="contact-topic" name="topic" class="form-select" required>
-                  <option value="" selected disabled>Select a topic</option>
-                  <option value="beans">Bean recommendations</option>
-                  <option value="brew">Brewing help</option>
-                  <option value="order">Order support</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div class="col-12">
-                <label for="contact-message" class="form-label">Message</label>
-                <textarea id="contact-message" name="message" class="form-control ah-contact-textarea" rows="6" required></textarea>
-              </div>
-              <div class="col-12">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="yes" id="contact-consent" required>
-                  <label class="form-check-label" for="contact-consent">
-                    I agree to be contacted about this enquiry.
-                  </label>
+            <?php endif; ?>
+
+            <form class="ah-contact-form" action="contact-us.php#contact-form" method="post" novalidate>
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label for="contact-name" class="form-label">Full name</label>
+                  <input id="contact-name" name="name" type="text" class="form-control" autocomplete="name"
+                         value="<?php echo $contactSticky['name'] ?? ''; ?>" required>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="contact-email" class="form-label">Email address</label>
+                  <input id="contact-email" name="email" type="email" class="form-control" autocomplete="email"
+                         value="<?php echo $contactSticky['email'] ?? ''; ?>" required>
+                </div>
+                <div class="col-12">
+                  <label for="contact-topic" class="form-label">Topic</label>
+                  <select id="contact-topic" name="topic" class="form-select" required>
+                    <option value="" <?php echo empty($contactSticky['topic']) ? 'selected' : ''; ?> disabled>Select a topic</option>
+                    <?php
+                    $topics = ['beans' => 'Bean recommendations', 'brew' => 'Brewing help', 'order' => 'Order support', 'other' => 'Other'];
+                    foreach ($topics as $val => $label):
+                      $selected = (($contactSticky['topic'] ?? '') === $val) ? 'selected' : '';
+                    ?>
+                      <option value="<?php echo $val; ?>" <?php echo $selected; ?>><?php echo $label; ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label for="contact-message" class="form-label">Message</label>
+                  <textarea id="contact-message" name="message" class="form-control ah-contact-textarea" rows="6" required><?php echo $contactSticky['message'] ?? ''; ?></textarea>
+                </div>
+                <div class="col-12">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="yes" id="contact-consent" name="consent" required>
+                    <label class="form-check-label" for="contact-consent">
+                      I agree to be contacted about this enquiry.
+                    </label>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-primary">Submit enquiry</button>
                 </div>
               </div>
-              <div class="col-12 d-flex flex-wrap align-items-center gap-3">
-                <button type="submit" class="btn btn-primary">Submit enquiry</button>
-                <p class="ah-contact-note mb-0">No data is sent yet until backend wiring is added.</p>
-              </div>
-            </div>
-          </form>
+            </form>
+
+          <?php endif; ?>
         </section>
       </div>
     </div>
