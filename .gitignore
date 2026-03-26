@@ -1,7 +1,13 @@
 # Ignore vscode launch configurations and settings
 .vscode/*
+<<<<<<< HEAD
 
 # Local environment secrets
 .env
 .env.*
 !.env.example
+=======
+.env.local
+.env.production
+.env
+>>>>>>> 1de367d (full code)
