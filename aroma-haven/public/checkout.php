@@ -1,5 +1,28 @@
 <?php
 $pageTitle = 'Checkout — Aroma Haven';
+
+$paypalClientId = '';
+$paypalCurrency = 'USD';
+$envPath = __DIR__ . '/../.env';
+if (is_readable($envPath)) {
+  $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  foreach ($lines as $line) {
+    $line = trim($line);
+    if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
+      continue;
+    }
+    [$k, $v] = explode('=', $line, 2);
+    $k = trim($k);
+    $v = trim($v, " \t\n\r\0\x0B\"'");
+    if ($k === 'PAYPAL_CLIENT_ID') {
+      $paypalClientId = $v;
+    }
+    if ($k === 'PAYPAL_CURRENCY' && $v !== '') {
+      $paypalCurrency = strtoupper($v);
+    }
+  }
+}
+
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/navbar.php';
 ?>
@@ -178,6 +201,15 @@ include __DIR__ . '/../includes/navbar.php';
           <input type="email" id="chkPaypalEmail" name="paypal_email" placeholder="your@email.com" autocomplete="email">
         </div>
 
+        <div id="ahPaypalButtonsWrap" hidden>
+          <?php if ($paypalClientId !== ''): ?>
+            <div id="paypal-button-container" class="mt-3"></div>
+            <p class="text-muted small mt-2 mb-0">Use the PayPal button to authorize payment.</p>
+          <?php else: ?>
+            <p class="text-danger mt-3 mb-0">PayPal is currently unavailable. Missing PAYPAL_CLIENT_ID in .env.</p>
+          <?php endif; ?>
+        </div>
+
         <!-- Actions -->
         <div class="ah-checkout-actions">
           <a href="shop-coffee.php" class="ah-checkout-back-btn">BACK TO SHOP</a>
@@ -192,11 +224,18 @@ include __DIR__ . '/../includes/navbar.php';
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
+<?php if ($paypalClientId !== ''): ?>
+<script src="https://www.paypal.com/sdk/js?client-id=<?php echo rawurlencode($paypalClientId); ?>&currency=<?php echo rawurlencode($paypalCurrency); ?>&intent=capture"></script>
+<?php endif; ?>
+
 <script>
 (function () {
   var CART_KEY = 'ah_cart';
   var SHIPPING = 5.99;
   var TAX_RATE = 0.08;
+  var PAYPAL_CURRENCY = <?php echo json_encode($paypalCurrency); ?>;
+  var paypalRendered = false;
+  var orderState = { subtotal: 0, tax: 0, total: 0 };
 
   function loadCart() {
     try { return Object.values(JSON.parse(localStorage.getItem(CART_KEY)) || {}); }
@@ -228,9 +267,75 @@ include __DIR__ . '/../includes/navbar.php';
     var tax   = subtotal * TAX_RATE;
     var total = subtotal + SHIPPING + tax;
 
+    orderState.subtotal = subtotal;
+    orderState.tax = tax;
+    orderState.total = total;
+
     document.getElementById('ahSubtotal').textContent = fmt(subtotal);
     document.getElementById('ahTax').textContent      = fmt(tax);
     document.getElementById('ahTotal').textContent    = fmt(total);
+  }
+
+  function finalizeOrder() {
+    var cartRaw = localStorage.getItem(CART_KEY);
+    sessionStorage.setItem('ah_confirm_order', cartRaw || '{}');
+    sessionStorage.setItem('ah_confirm_num', Date.now().toString(36).toUpperCase().slice(-6));
+    localStorage.removeItem(CART_KEY);
+    window.location.href = 'confirmation.php';
+  }
+
+  function initPaypalButtons() {
+    if (paypalRendered || !window.paypal) return;
+    var container = document.getElementById('paypal-button-container');
+    if (!container) return;
+
+    paypalRendered = true;
+    window.paypal.Buttons({
+      style: {
+        layout: 'vertical',
+        shape: 'rect',
+        label: 'paypal'
+      },
+      createOrder: function () {
+        var form = document.getElementById('ahCheckoutForm');
+        if (!form.checkValidity()) {
+          form.classList.add('was-validated');
+          return Promise.reject(new Error('Please fill in required shipping details first.'));
+        }
+
+        return fetch('paypal_api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create',
+            total: orderState.total.toFixed(2),
+            currency: PAYPAL_CURRENCY
+          })
+        })
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (!data.id) throw new Error('Unable to create PayPal order.');
+            return data.id;
+          });
+      },
+      onApprove: function (data) {
+        return fetch('paypal_api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'capture', orderID: data.orderID })
+        })
+          .then(function (res) { return res.json(); })
+          .then(function (capture) {
+            if (capture.status !== 'COMPLETED') {
+              throw new Error('Payment not completed.');
+            }
+            finalizeOrder();
+          });
+      },
+      onError: function () {
+        alert('PayPal payment failed. Please try again.');
+      }
+    }).render('#paypal-button-container');
   }
 
   /* Payment toggle */
@@ -240,6 +345,8 @@ include __DIR__ . '/../includes/navbar.php';
       document.getElementById('ahCreditCardFields').hidden = isPaypal;
       document.getElementById('ahPaypalNotice').hidden    = !isPaypal;
       document.getElementById('ahPaypalEmailWrap').hidden = !isPaypal;
+      document.getElementById('ahPaypalButtonsWrap').hidden = !isPaypal;
+      if (isPaypal) initPaypalButtons();
     });
   });
 
@@ -250,14 +357,22 @@ include __DIR__ . '/../includes/navbar.php';
       this.classList.add('was-validated');
       return;
     }
-    /* Snapshot the cart into sessionStorage so confirmation.php can display it */
-    var cartRaw = localStorage.getItem(CART_KEY);
-    sessionStorage.setItem('ah_confirm_order', cartRaw || '{}');
-    sessionStorage.setItem('ah_confirm_num', Date.now().toString(36).toUpperCase().slice(-6));
-    localStorage.removeItem(CART_KEY);
-    window.location.href = 'confirmation.php';
+
+    var selectedPayment = document.querySelector('input[name="payment"]:checked');
+    if (selectedPayment && selectedPayment.value === 'paypal') {
+      alert('Click the PayPal button to complete payment.');
+      return;
+    }
+
+    finalizeOrder();
   });
 
   renderSummary();
+
+  var selectedOnLoad = document.querySelector('input[name="payment"]:checked');
+  if (selectedOnLoad && selectedOnLoad.value === 'paypal') {
+    document.getElementById('ahPaypalButtonsWrap').hidden = false;
+    initPaypalButtons();
+  }
 }());
 </script>

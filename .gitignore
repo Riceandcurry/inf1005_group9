@@ -1,2 +1,7 @@
 # Ignore vscode launch configurations and settings
 .vscode/*
+
+# Local environment secrets
+.env
+.env.*
+!.env.example
