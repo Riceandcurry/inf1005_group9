@@ -1,52 +1,37 @@
 <?php
-require 'util.php';
+require_once 'util.php';
+require_once 'auth.php';
 
-function register_process($data){    
-    $conn = connect_db();
-    if($conn->connect_error)
-        die("Connection Failed:".$conn->connect_error);        
+function register_process($data){
 
+    global $auth, $conn;
 
-    $errorMsg= "";        
-    $fname = sanitize_input($data['first_name'] ?? '');
-    $lname = sanitize_input($data['last_name'] ?? '');
-    $email = sanitize_input($data['email'] ?? '');
-    $password = (string)($data['password'] ?? '');
-    $confirm_password = (string)($data['confirm_password'] ?? '');
-    $brew_style = (int)($data['brew_method'] ?? 0);
+    $email = sanitize_input($data['email']);
+    $password = $data['password'];
+    $fname = sanitize_input($data['first_name']);
+    $lname = sanitize_input($data['last_name']);
+    $brew_style = isset($data['brew_method']) ? (int)$data['brew_method'] : null;
 
-    if (empty($email))
-        $errorMsg .= "Email is required.<br>";
-    elseif(!filter_var($email, FILTER_VALIDATE_EMAIL))
-        $errorMsg .= "Invalid email format.";
+    $result = $auth->register($email, $password, $password);
 
-    if(empty($fname))
-        $errorMsg .= "First Name is required.<br>";            
-    if(empty($lname))
-        $errorMsg .= "Last Name is required.<br>";            
-    if(empty($password))
-        $errorMsg .= "Password is required.<br>";
-    if(empty($confirm_password))
-        $errorMsg .= "Confirm Password is required.<br>";
-    elseif($password !== $confirm_password)
-        $errorMsg .= "Passwords do not match.<br>";
-    if(empty($brew_style))
-        $errorMsg .= "Please select a brewstyle.<br>";          
-
-    if(empty($errorMsg)){
-        $pw_hash = password_hash($password, PASSWORD_DEFAULT);
-        try {
-            $stmt = $conn->prepare("INSERT INTO users (fname, lname, email, password, brew_style_id) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssi", $fname, $lname, $email, $pw_hash, $brew_style);
-            $stmt->execute();            
-        } catch (mysqli_sql_exception $e) {            
-            $errorMsg = "Unable to create account right now. Please try again.";
-            return;
-        }
-        $stmt->close();
-        $conn->close();
+    if($result['error']){
+        return $result['message'];
     }
-    return $errorMsg;
 
+    $user_id = $result['uid'];
+
+    try {
+        $stmt = $conn->prepare("
+            INSERT INTO user_profiles (user_id, fname, lname, brew_style_id)
+            VALUES (?, ?, ?, ?)
+        ");
+
+        $stmt->execute([$user_id, $fname, $lname, $brew_style]);
+
+    } catch (PDOException $e) {
+        return $e->getMessage();
+    }
+
+    return "";
 }
 ?>

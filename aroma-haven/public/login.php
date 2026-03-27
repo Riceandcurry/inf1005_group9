@@ -1,6 +1,8 @@
 <?php
 $pageTitle = 'Aroma Haven | Login';
 $bodyClass = 'ah-auth-body';
+require_once __DIR__ . '/../backend/guest_guard.php';
+require_guest();
 include __DIR__ . '/../includes/header.php';
 ?>
 
@@ -25,7 +27,7 @@ include __DIR__ . '/../includes/header.php';
         <h1 id="login-title" class="ah-auth-title">Welcome back.</h1>
         <p class="ah-auth-subtitle">Sign in to reach your coffee cabinet and checkout in seconds.</p>
 
-        <form action="login.php" method="post" class="ah-auth-form">
+        <form action="route.php" method="post" class="ah-auth-form">
           <div>
             <label for="email" class="ah-auth-label form-label mb-1">Email address</label>
             <input type="email" id="email" name="email" class="form-control ah-auth-input" placeholder="jane@example.com" autocomplete="email" required>
@@ -36,8 +38,15 @@ include __DIR__ . '/../includes/header.php';
             <input type="password" id="password" name="password" class="form-control ah-auth-input" placeholder="********" autocomplete="current-password" required>
           </div>
 
-          <button type="submit" class="btn btn-primary w-100 ah-auth-btn">Sign in</button>
+          <button type="submit" class="btn btn-primary w-100 ah-auth-btn">Sign in</button>         
           <p class="ah-auth-trust">Secure session. Your account data stays protected.</p>
+          <input type="hidden" name="action" value="login">
+          <?php
+          if (isset($_SESSION['error'])) {
+              echo "<p class='ah-auth-error mb-0' role='alert' aria-live='assertive'>" . htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8') . "</p>";
+              unset($_SESSION['error']);
+          }
+          ?>           
         </form>
 
         <p class="ah-auth-footnote">

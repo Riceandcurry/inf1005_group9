@@ -1,46 +1,52 @@
 <?php
+
+require_once __DIR__ . '/../backend/init.php';
 require_once __DIR__ . '/../backend/register.php';
-//require_once __DIR__ . '/../backend/login_process.php';
-session_start();
-$method = $_SERVER['REQUEST_METHOD'];
-$action = $_REQUEST['action'] ?? '';
+require_once __DIR__ . '/../backend/login.php';
 
-switch ($method) {
-    case 'POST':
-        switch ($action) {
-            case 'register':
-                $result = register_process($_POST);
-                if(empty($result)){
-                    $_SESSION['msg'] = "Account Created Sucessfully!";
-                    header("Location: login.php");
-                    exit;  
-                }
-                else{                                 
-                    $_SESSION['error'] = $result;
-                    header("Location: register.php");
-                    exit;
-                }
 
-            default:
-                $result = "Unknown POST action.";
-                break;
-        }
-        break;
-
-    case 'GET':
-        switch($action){
-            case 'login':
-                break;
-               
-        }        
-    default:
-        $result = "Unsupported HTTP method: $method";
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo "Method Not Allowed";
+    exit;
 }
 
-if (is_string($result)) {
-    http_response_code(400);
-    echo "Request could not be processed.";
-} else {
-    header('Content-Type: application/json');
-    echo json_encode($result);
+$action = $_POST['action'] ?? '';
+
+switch ($action) {
+
+    case 'login':
+        $result = login_process($_POST);
+        if (empty($result)) {
+            session_regenerate_id(true); // security
+            header("Location: shop-coffee.php");
+            exit;
+        } else {
+            $_SESSION['error'] = $result;
+            header("Location: login.php");
+            exit;
+        }
+
+    case 'register':
+        $result = register_process($_POST);
+
+        if (empty($result)) {
+            $_SESSION['msg'] = "Account created successfully!";
+            header("Location: login.php");
+            exit;
+        } else {
+            $_SESSION['error'] = $result;
+            header("Location: register.php");
+            exit;
+        }
+
+    case 'logout':
+        session_destroy();
+        header("Location: login.php");
+        exit;
+
+    default:
+        http_response_code(400);
+        echo "Invalid action.";
+        exit;
 }
