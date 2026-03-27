@@ -1,5 +1,5 @@
 <?php
-require 'util.php';
+require_once 'util.php';
 require_once 'auth.php';
 
 function register_process($data){

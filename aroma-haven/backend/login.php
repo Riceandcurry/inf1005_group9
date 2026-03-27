@@ -1,6 +1,6 @@
 <?php
-require_once 'auth.php';
-session_start();
+
+
 
 function login_process($data){
     global $auth;
@@ -13,9 +13,7 @@ function login_process($data){
     if($result['error']){
         return $result['message'];
     }
-    
-    $_SESSION['user_id'] = $result['uid'];
-    $_SESSION['hash'] = $result['hash'];
 
     return "";
 }
+?>

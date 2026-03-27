@@ -1,15 +1,9 @@
 <?php
 $pageTitle = 'Aroma Haven | Register';
 $bodyClass = 'ah-auth-body';
+require_once __DIR__ . '/../backend/guest_guard.php';
+require_guest();
 include __DIR__ . '/../includes/header.php';
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
-if (isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
-}
 ?>
 
 <main class="ah-auth-page">
