@@ -41,12 +41,13 @@ include __DIR__ . '/../includes/header.php';
           <button type="submit" class="btn btn-primary w-100 ah-auth-btn">Sign in</button>         
           <p class="ah-auth-trust">Secure session. Your account data stays protected.</p>
           <input type="hidden" name="action" value="login">
+          <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
           <?php
           if (isset($_SESSION['error'])) {
               echo "<p class='ah-auth-error mb-0' role='alert' aria-live='assertive'>" . htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8') . "</p>";
               unset($_SESSION['error']);
           }
-          ?>           
+          ?>                     
         </form>
 
         <p class="ah-auth-footnote">

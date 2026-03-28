@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../backend/auth_guard.php';
+require_login();
 $pageTitle = 'Order Confirmed — Aroma Haven';
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/navbar.php';
