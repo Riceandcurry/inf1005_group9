@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../backend/auth_guard.php';
+require_login();
 $pageTitle = 'Checkout — Aroma Haven';
 
 $paypalClientId = '';

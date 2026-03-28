@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../backend/init.php';
 $pageTitle = 'Aroma Haven | Shop Coffee';
 $bodyClass = 'ah-shop-page';
 
