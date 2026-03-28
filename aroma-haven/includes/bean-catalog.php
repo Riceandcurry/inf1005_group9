@@ -1,125 +1,79 @@
 <?php
 
-function ah_get_bean_catalog()
+require_once __DIR__ . '/../backend/util.php';
+
+function ah_row_to_bean(array $row): array
 {
+    $roastMap = [
+        'Light'  => 'Light roast',
+        'Medium' => 'Medium roast',
+        'Dark'   => 'Dark roast',
+    ];
+
+    $tags = [];
+    if (!empty($row['tasting_notes'])) {
+        $decoded = json_decode($row['tasting_notes'], true);
+        if (is_array($decoded)) {
+            $tags = $decoded;
+        }
+    }
+
     return [
-        'sumatra-mandheling' => [
-            'id' => 'sumatra-mandheling',
-            'name' => 'Sumatra Mandheling',
-            'origin' => 'Aceh, Indonesia',
-            'price' => '$24',
-            'roast' => 'Medium roast',
-            'image' => './images/products/product_1.jpg',
-            'tags' => ['Dark Cocoa', 'Earthy', 'Spice'],
-            'description' => 'A full-bodied cup with syrupy texture and low acidity, ideal for milk-based drinks.',
-            'process' => 'Wet-hulled',
-            'altitude' => '1,200-1,500 masl',
-        ],
-        'ethiopia-yirgacheffe' => [
-            'id' => 'ethiopia-yirgacheffe',
-            'name' => 'Ethiopia Yirgacheffe',
-            'origin' => 'Yirgacheffe, Ethiopia',
-            'price' => '$26',
-            'roast' => 'Light roast',
-            'image' => './images/products/product_1.jpg',
-            'tags' => ['Jasmine', 'Citrus', 'Tea-like'],
-            'description' => 'Floral and bright with bergamot-like aromatics and a clean, silky finish.',
-            'process' => 'Washed',
-            'altitude' => '1,800-2,100 masl',
-        ],
-        'colombia-huila' => [
-            'id' => 'colombia-huila',
-            'name' => 'Colombia Huila',
-            'origin' => 'Huila, Colombia',
-            'price' => '$23',
-            'roast' => 'Medium roast',
-            'image' => './images/products/product_1.jpg',
-            'tags' => ['Caramel', 'Red Apple', 'Cocoa'],
-            'description' => 'Balanced sweetness and gentle fruit notes that brew consistently for daily drinking.',
-            'process' => 'Washed',
-            'altitude' => '1,500-1,900 masl',
-        ],
-        'kenya-aa' => [
-            'id' => 'kenya-aa',
-            'name' => 'Kenya AA',
-            'origin' => 'Nyeri, Kenya',
-            'price' => '$27',
-            'roast' => 'Light roast',
-            'image' => './images/products/product_1.jpg',
-            'tags' => ['Blackcurrant', 'Tomato', 'Lively'],
-            'description' => 'Juicy acidity with bold berry character and a lingering structured finish.',
-            'process' => 'Washed',
-            'altitude' => '1,700-2,000 masl',
-        ],
-        'brazil-cerrado' => [
-            'id' => 'brazil-cerrado',
-            'name' => 'Brazil Cerrado',
-            'origin' => 'Minas Gerais, Brazil',
-            'price' => '$21',
-            'roast' => 'Medium-dark roast',
-            'image' => './images/products/product_1.jpg',
-            'tags' => ['Hazelnut', 'Chocolate', 'Sweet'],
-            'description' => 'Comforting profile with low acidity and nutty sweetness suited for espresso.',
-            'process' => 'Natural',
-            'altitude' => '900-1,250 masl',
-        ],
-        'guatemala-antigua' => [
-            'id' => 'guatemala-antigua',
-            'name' => 'Guatemala Antigua',
-            'origin' => 'Antigua, Guatemala',
-            'price' => '$25',
-            'roast' => 'Medium roast',
-            'image' => './images/products/product_1.jpg',
-            'tags' => ['Cacao', 'Orange', 'Smoky'],
-            'description' => 'Structured and layered cup with cocoa depth and gentle citrus brightness.',
-            'process' => 'Washed',
-            'altitude' => '1,500-1,700 masl',
-        ],
-        'rwanda-huye' => [
-            'id' => 'rwanda-huye',
-            'name' => 'Rwanda Huye',
-            'origin' => 'Huye, Rwanda',
-            'price' => '$24',
-            'roast' => 'Light roast',
-            'image' => './images/products/product_1.jpg',
-            'tags' => ['Stone Fruit', 'Honey', 'Clean'],
-            'description' => 'Elegant sweetness and bright fruit clarity with a crisp, tea-like body.',
-            'process' => 'Washed',
-            'altitude' => '1,700-2,000 masl',
-        ],
-        'panama-geisha' => [
-            'id' => 'panama-geisha',
-            'name' => 'Panama Geisha',
-            'origin' => 'Boquete, Panama',
-            'price' => '$38',
-            'roast' => 'Light roast',
-            'image' => './images/products/product_1.jpg',
-            'tags' => ['Bergamot', 'Peach', 'Floral'],
-            'description' => 'Highly aromatic and delicate, with layered florals and refined sweetness.',
-            'process' => 'Washed',
-            'altitude' => '1,600-1,900 masl',
-        ],
-        'peru-cajamarca' => [
-            'id' => 'peru-cajamarca',
-            'name' => 'Peru Cajamarca',
-            'origin' => 'Cajamarca, Peru',
-            'price' => '$22',
-            'roast' => 'Medium roast',
-            'image' => './images/products/product_1.jpg',
-            'tags' => ['Brown Sugar', 'Citrus', 'Walnut'],
-            'description' => 'Soft sweetness and mellow body with approachable citrus notes for all brew methods.',
-            'process' => 'Washed',
-            'altitude' => '1,400-1,900 masl',
-        ],
+        'id'          => (int) $row['id'],
+        'slug'        => $row['slug'] ?? '',
+        'name'        => $row['name'],
+        'origin'      => $row['origin'],
+        'price'       => '$' . number_format((float) $row['price'], 0),
+        'price_raw'   => (float) $row['price'],
+        'roast'       => $roastMap[$row['roast_level']] ?? $row['roast_level'],
+        'image'       => $row['image'] ?? './images/products/product_1.jpg',
+        'tags'        => $tags,
+        'description' => $row['description'] ?? '',
+        'process'     => $row['process'] ?? '',
+        'altitude'    => $row['altitude'] ?? '',
     ];
 }
 
-function ah_get_home_beans()
+function ah_get_bean_catalog(): array
 {
-    $catalog = ah_get_bean_catalog();
-    return [
-        $catalog['sumatra-mandheling'],
-        $catalog['ethiopia-yirgacheffe'],
-        $catalog['colombia-huila'],
-    ];
+    $conn = connect_db();
+    $stmt = $conn->query(
+        "SELECT * FROM products WHERE is_active = 1 ORDER BY id ASC"
+    );
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $catalog = [];
+    foreach ($rows as $row) {
+        $bean = ah_row_to_bean($row);
+        $catalog[$bean['id']] = $bean;
+    }
+
+    return $catalog;
+}
+
+function ah_get_bean_by_id(int $id): ?array
+{
+    $conn = connect_db();
+    $stmt = $conn->prepare(
+        "SELECT * FROM products WHERE id = ? AND is_active = 1 LIMIT 1"
+    );
+    $stmt->execute([$id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$row) {
+        return null;
+    }
+
+    return ah_row_to_bean($row);
+}
+
+function ah_get_home_beans(): array
+{
+    $conn = connect_db();
+    $stmt = $conn->query(
+        "SELECT * FROM products WHERE is_active = 1 ORDER BY id ASC LIMIT 3"
+    );
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    return array_map('ah_row_to_bean', $rows);
 }
