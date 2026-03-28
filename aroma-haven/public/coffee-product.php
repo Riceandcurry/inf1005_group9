@@ -3,45 +3,27 @@ $pageTitle = 'Aroma Haven | Coffee Product';
 $bodyClass = 'ah-shell-xr';
 
 require_once __DIR__ . '/../includes/bean-catalog.php';
-$catalog = ah_get_bean_catalog();
-$beanId = isset($_GET['bean']) ? (string) $_GET['bean'] : '';
-$bean = $catalog[$beanId] ?? null;
+
+$beanId = isset($_GET['bean']) ? (int) $_GET['bean'] : 0;
+$bean = $beanId > 0 ? ah_get_bean_by_id($beanId) : null;
 
 if ($bean !== null) {
   $pageTitle = 'Aroma Haven | ' . $bean['name'];
 }
 
-$reviews = [
-  [
-    'title' => 'Product name',
-    'copy' => 'As already said, the Three-Pack was gifted to me this past Christmas. I love coffee and for me iced coffee is the most flavorful. After much enjoyment the Three-Pack from Christmas...',
-    'author' => 'Jane D. Verified Buyer',
-    'date' => '10/10/19999',
-  ],
-  [
-    'title' => 'Product name',
-    'copy' => 'As already said, the Three-Pack was gifted to me this past Christmas. I love coffee and for me iced coffee is the most flavorful. After much enjoyment the Three-Pack from Christmas...',
-    'author' => 'Jane D. Verified Buyer',
-    'date' => '10/10/19999',
-  ],
-  [
-    'title' => 'Product name',
-    'copy' => 'As already said, the Three-Pack was gifted to me this past Christmas. I love coffee and for me iced coffee is the most flavorful. After much enjoyment the Three-Pack from Christmas...',
-    'author' => 'Jane D. Verified Buyer',
-    'date' => '10/10/19999',
-  ],
-];
-
 $grindOptions = ['Whole bean', 'French Press', 'Filter Drip', 'Espresso'];
-$relatedBeans = [];
 
-foreach ($catalog as $catalogBean) {
-  if ($bean !== null && ($catalogBean['id'] ?? '') === ($bean['id'] ?? '')) {
-    continue;
-  }
-  $relatedBeans[] = $catalogBean;
-  if (count($relatedBeans) >= 3) {
-    break;
+// Related beans — all active products except current
+$relatedBeans = [];
+if ($bean !== null) {
+  $conn = connect_db();
+  $stmt = $conn->prepare(
+    "SELECT * FROM products WHERE is_active = 1 AND id != ? ORDER BY id ASC LIMIT 3"
+  );
+  $stmt->execute([$bean['id']]);
+  $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  foreach ($rows as $row) {
+    $relatedBeans[] = ah_row_to_bean($row);
   }
 }
 
@@ -139,7 +121,7 @@ include __DIR__ . '/../includes/navbar.php';
                 </div>
                 <button type="button"
                   class="btn btn-primary ah-coffee-add-btn"
-                  data-id="<?php echo htmlspecialchars($bean['id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                  data-id="<?php echo htmlspecialchars((string)$bean['id'], ENT_QUOTES, 'UTF-8'); ?>"
                   data-name="<?php echo htmlspecialchars($bean['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                   data-origin="<?php echo htmlspecialchars($bean['origin'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                   data-price="<?php echo htmlspecialchars($bean['price'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
@@ -164,18 +146,9 @@ include __DIR__ . '/../includes/navbar.php';
       <h2 class="ah-coffee-reviews-title mb-0">What Coffee Drinkers Are Saying</h2>
     </header>
     <div class="row g-4">
-      <?php foreach ($reviews as $review): ?>
-        <div class="col-12 col-md-6 col-lg-4">
-          <article class="ah-review-card h-100">
-            <p class="ah-review-product mb-2"><?php echo htmlspecialchars($bean['name'] ?? $review['title'], ENT_QUOTES, 'UTF-8'); ?></p>
-            <p class="ah-review-copy mb-3"><?php echo htmlspecialchars($review['copy'], ENT_QUOTES, 'UTF-8'); ?></p>
-            <div class="d-flex justify-content-between align-items-center gap-3 mt-auto">
-              <p class="ah-review-author mb-0"><?php echo htmlspecialchars($review['author'], ENT_QUOTES, 'UTF-8'); ?></p>
-              <p class="ah-review-date mb-0"><?php echo htmlspecialchars($review['date'], ENT_QUOTES, 'UTF-8'); ?></p>
-            </div>
-          </article>
-        </div>
-      <?php endforeach; ?>
+      <div class="col-12 text-center text-muted py-4">
+        <p class="mb-0">No reviews yet. Be the first to share your experience.</p>
+      </div>
     </div>
   </section>
 
@@ -194,10 +167,7 @@ include __DIR__ . '/../includes/navbar.php';
           <div class="col-12 col-md-6 col-lg-4">
             <?php
             $relatedBeanCard = $relatedBean;
-            $relatedBeanId = isset($relatedBeanCard['id']) ? (string) $relatedBeanCard['id'] : '';
-            $relatedProductHref = $relatedBeanId !== ''
-              ? 'coffee-product.php?bean=' . rawurlencode($relatedBeanId)
-              : 'coffee-product.php';
+            $relatedProductHref = 'coffee-product.php?bean=' . (int)$relatedBeanCard['id'];
             $relatedBeanCard['cta_label'] = 'Open detail';
             $relatedBeanCard['cta_href'] = $relatedProductHref;
             $bean = $relatedBeanCard;
