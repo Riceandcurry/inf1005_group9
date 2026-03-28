@@ -88,9 +88,9 @@ include __DIR__ . '/../includes/navbar.php';
         <?php foreach ($featuredBeans as $bean): ?>
           <div class="col-12 col-md-6 col-lg-4">
             <?php
-            $beanId = isset($bean['id']) ? (string) $bean['id'] : '';
-            $productHref = $beanId !== ''
-              ? 'coffee-product.php?bean=' . rawurlencode($beanId)
+            $beanId = isset($bean['id']) ? (int) $bean['id'] : 0;
+            $productHref = $beanId > 0
+              ? 'coffee-product.php?bean=' . $beanId
               : 'coffee-product.php';
             $bean['cta_label'] = 'Open detail';
             $bean['cta_href'] = $productHref;
