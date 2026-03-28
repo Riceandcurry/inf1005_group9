@@ -129,14 +129,14 @@ include __DIR__ . '/../includes/navbar.php';
           <div class="row g-4" id="ahShopGrid">
             <?php foreach ($shopBeans as $bean): ?>
               <?php
-              $beanId = isset($bean['id']) ? (string) $bean['id'] : '';
+              $beanId = isset($bean['id']) ? (int) $bean['id'] : 0;
               $beanName = $bean['name'] ?? 'Bean name';
               $beanOrigin = $bean['origin'] ?? 'Bean origin';
               $beanPrice = $bean['price'] ?? '$0';
-              $beanPriceNumeric = (float) preg_replace('/[^0-9.]/', '', (string) $beanPrice);
+              $beanPriceNumeric = $bean['price_raw'] ?? (float) preg_replace('/[^0-9.]/', '', (string) $beanPrice);
               $beanTags = array_slice((array)($bean['tags'] ?? []), 0, 3);
-              $productHref = $beanId !== ''
-                ? 'coffee-product.php?bean=' . rawurlencode($beanId)
+              $productHref = $beanId > 0
+                ? 'coffee-product.php?bean=' . $beanId
                 : 'coffee-product.php';
               $bean['cta_label'] = 'Open detail';
               $bean['cta_href'] = $productHref;
