@@ -1,0 +1,275 @@
+<?php
+require_once __DIR__ . '/../backend/init.php';
+require_once __DIR__ . '/../backend/admin_guard.php';
+require_once __DIR__ . '/../backend/admin_helpers.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+function admin_redirect_with_flash(string $location, string $type, string $message): void
+{
+    ah_admin_set_flash($type, $message);
+    header('Location: ' . $location);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo 'Method Not Allowed';
+    exit;
+}
+
+require_admin();
+
+if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], (string) ($_POST['csrf_token'] ?? ''))) {
+    admin_redirect_with_flash('admin-dashboard.php', 'danger', 'Invalid CSRF token. Please refresh and try again.');
+}
+
+$action = (string) ($_POST['action'] ?? '');
+$currentUserId = ah_current_user_id();
+$conn = connect_db();
+
+switch ($action) {
+    case 'product_create':
+    case 'product_update':
+        $productId = (int) ($_POST['product_id'] ?? 0);
+        $name = trim((string) ($_POST['name'] ?? ''));
+        $origin = trim((string) ($_POST['origin'] ?? ''));
+        $price = (float) ($_POST['price'] ?? 0);
+        $roastLevel = trim((string) ($_POST['roast_level'] ?? ''));
+        $image = trim((string) ($_POST['image'] ?? ''));
+        $tagsCsv = (string) ($_POST['tasting_notes_csv'] ?? '');
+        $description = trim((string) ($_POST['description'] ?? ''));
+        $process = trim((string) ($_POST['process'] ?? ''));
+        $altitude = trim((string) ($_POST['altitude'] ?? ''));
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
+
+        if ($name === '' || $origin === '' || $price <= 0) {
+            admin_redirect_with_flash('admin-products.php', 'danger', 'Name, origin, and a valid price are required.');
+        }
+
+        if (!in_array($roastLevel, ['Light', 'Medium', 'Dark'], true)) {
+            admin_redirect_with_flash('admin-products.php', 'danger', 'Roast level must be Light, Medium, or Dark.');
+        }
+
+        $tags = array_values(array_filter(array_map('trim', explode(',', $tagsCsv)), function ($value) {
+            return $value !== '';
+        }));
+        $tagsJson = !empty($tags) ? json_encode($tags, JSON_UNESCAPED_UNICODE) : null;
+
+        if ($action === 'product_create') {
+            $slug = ah_unique_product_slug($name);
+            $stmt = $conn->prepare(
+                'INSERT INTO products (slug, name, origin, price, roast_level, image, tasting_notes, description, process, altitude, is_active)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            );
+            $stmt->execute([
+                $slug,
+                $name,
+                $origin,
+                $price,
+                $roastLevel,
+                $image,
+                $tagsJson,
+                $description,
+                $process,
+                $altitude,
+                $isActive,
+            ]);
+
+            $newId = (int) $conn->lastInsertId();
+            ah_admin_audit($currentUserId, 'product_create', 'product', (string) $newId, [
+                'name' => $name,
+                'is_active' => $isActive,
+            ]);
+
+            admin_redirect_with_flash('admin-products.php', 'success', 'Product created successfully.');
+        }
+
+        if ($productId <= 0) {
+            admin_redirect_with_flash('admin-products.php', 'danger', 'Invalid product selected.');
+        }
+
+        $slug = ah_unique_product_slug($name, $productId);
+        $stmt = $conn->prepare(
+            'UPDATE products
+             SET slug = ?, name = ?, origin = ?, price = ?, roast_level = ?, image = ?, tasting_notes = ?, description = ?, process = ?, altitude = ?, is_active = ?
+             WHERE id = ?'
+        );
+        $stmt->execute([
+            $slug,
+            $name,
+            $origin,
+            $price,
+            $roastLevel,
+            $image,
+            $tagsJson,
+            $description,
+            $process,
+            $altitude,
+            $isActive,
+            $productId,
+        ]);
+
+        ah_admin_audit($currentUserId, 'product_update', 'product', (string) $productId, [
+            'name' => $name,
+            'is_active' => $isActive,
+        ]);
+
+        admin_redirect_with_flash('admin-products.php', 'success', 'Product updated successfully.');
+
+    case 'contact_update':
+        $submissionId = (int) ($_POST['submission_id'] ?? 0);
+        $status = trim((string) ($_POST['status'] ?? 'new'));
+        $internalNote = trim((string) ($_POST['internal_note'] ?? ''));
+
+        if ($submissionId <= 0 || !in_array($status, ['new', 'in_progress', 'resolved'], true)) {
+            admin_redirect_with_flash('admin-contacts.php', 'danger', 'Invalid contact update request.');
+        }
+
+        $stmt = $conn->prepare('UPDATE contact_submissions SET status = ?, internal_note = ? WHERE id = ?');
+        $stmt->execute([$status, $internalNote, $submissionId]);
+
+        ah_admin_audit($currentUserId, 'contact_update', 'contact_submission', (string) $submissionId, [
+            'status' => $status,
+        ]);
+
+        admin_redirect_with_flash('admin-contacts.php#contact-' . $submissionId, 'success', 'Contact record updated.');
+
+    case 'contact_reply':
+        $submissionId = (int) ($_POST['submission_id'] ?? 0);
+        $subject = trim((string) ($_POST['reply_subject'] ?? ''));
+        $body = trim((string) ($_POST['reply_body'] ?? ''));
+
+        if ($submissionId <= 0 || $subject === '' || $body === '') {
+            admin_redirect_with_flash('admin-contacts.php', 'danger', 'Reply subject and body are required.');
+        }
+
+        $stmt = $conn->prepare('SELECT id, name, email FROM contact_submissions WHERE id = ? LIMIT 1');
+        $stmt->execute([$submissionId]);
+        $submission = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$submission) {
+            admin_redirect_with_flash('admin-contacts.php', 'danger', 'Contact submission not found.');
+        }
+
+        $mail = new PHPMailer(true);
+        $sent = false;
+        $error = null;
+
+        try {
+            $mail->isSMTP();
+            $mail->Host = $_ENV['MAIL_HOST'] ?? '';
+            $mail->SMTPAuth = true;
+            $mail->Username = $_ENV['MAIL_USER'] ?? '';
+            $mail->Password = $_ENV['MAIL_PASS'] ?? '';
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = (int) ($_ENV['MAIL_PORT'] ?? 587);
+
+            $fromAddress = $_ENV['MAIL_USER'] ?? 'no-reply@localhost';
+            $fromName = $_ENV['MAIL_FROM_NAME'] ?? 'Aroma Haven';
+            $mail->setFrom($fromAddress, $fromName);
+            $mail->addAddress((string) $submission['email'], (string) ($submission['name'] ?? ''));
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = nl2br(htmlspecialchars($body, ENT_QUOTES, 'UTF-8'));
+            $mail->AltBody = $body;
+            $mail->send();
+            $sent = true;
+        } catch (Exception $ex) {
+            $error = $ex->getMessage();
+        }
+
+        if ($sent) {
+            $stmt = $conn->prepare('UPDATE contact_submissions SET status = ?, replied_at = NOW(), replied_by = ? WHERE id = ?');
+            $stmt->execute(['resolved', $currentUserId, $submissionId]);
+
+            if (ah_table_exists('contact_replies')) {
+                $replyStmt = $conn->prepare(
+                    'INSERT INTO contact_replies (submission_id, replied_by, reply_subject, reply_body, sent_success, error_message)
+                     VALUES (?, ?, ?, ?, ?, ?)'
+                );
+                $replyStmt->execute([$submissionId, $currentUserId, $subject, $body, 1, null]);
+            }
+
+            ah_admin_audit($currentUserId, 'contact_reply_sent', 'contact_submission', (string) $submissionId, [
+                'subject' => $subject,
+            ]);
+
+            admin_redirect_with_flash('admin-contacts.php#contact-' . $submissionId, 'success', 'Reply email sent successfully.');
+        }
+
+        if (ah_table_exists('contact_replies')) {
+            $replyStmt = $conn->prepare(
+                'INSERT INTO contact_replies (submission_id, replied_by, reply_subject, reply_body, sent_success, error_message)
+                 VALUES (?, ?, ?, ?, ?, ?)'
+            );
+            $replyStmt->execute([$submissionId, $currentUserId, $subject, $body, 0, $error]);
+        }
+
+        ah_admin_audit($currentUserId, 'contact_reply_failed', 'contact_submission', (string) $submissionId, [
+            'subject' => $subject,
+            'error' => $error,
+        ]);
+
+        admin_redirect_with_flash('admin-contacts.php#contact-' . $submissionId, 'danger', 'Reply could not be sent. Please check mail settings.');
+
+    case 'user_toggle_admin':
+        $targetUserId = (int) ($_POST['target_user_id'] ?? 0);
+        if ($targetUserId <= 0) {
+            admin_redirect_with_flash('admin-users.php', 'danger', 'Invalid user selected.');
+        }
+
+        $currentlyAdmin = ah_user_is_admin($targetUserId);
+        $makeAdmin = !$currentlyAdmin;
+
+        if ($targetUserId === $currentUserId && !$makeAdmin) {
+            admin_redirect_with_flash('admin-users.php#user-' . $targetUserId, 'danger', 'You cannot remove your own admin access.');
+        }
+
+        if (!ah_set_user_admin_role($targetUserId, $makeAdmin, $currentUserId)) {
+            admin_redirect_with_flash('admin-users.php#user-' . $targetUserId, 'danger', 'Unable to update admin role.');
+        }
+
+        ah_admin_audit($currentUserId, $makeAdmin ? 'user_promote_admin' : 'user_demote_admin', 'user', (string) $targetUserId);
+
+        admin_redirect_with_flash(
+            'admin-users.php#user-' . $targetUserId,
+            'success',
+            $makeAdmin ? 'User promoted to admin.' : 'Admin access revoked.'
+        );
+
+    case 'user_toggle_suspend':
+        $targetUserId = (int) ($_POST['target_user_id'] ?? 0);
+        $reason = trim((string) ($_POST['suspension_reason'] ?? ''));
+
+        if ($targetUserId <= 0) {
+            admin_redirect_with_flash('admin-users.php', 'danger', 'Invalid user selected.');
+        }
+
+        if ($targetUserId === $currentUserId) {
+            admin_redirect_with_flash('admin-users.php#user-' . $targetUserId, 'danger', 'You cannot suspend your own account.');
+        }
+
+        $currentlySuspended = ah_is_user_suspended($targetUserId);
+        $suspend = !$currentlySuspended;
+
+        if (!ah_set_user_suspension($targetUserId, $suspend, $reason, $currentUserId)) {
+            admin_redirect_with_flash('admin-users.php#user-' . $targetUserId, 'danger', 'Unable to update suspension state.');
+        }
+
+        ah_admin_audit($currentUserId, $suspend ? 'user_suspend' : 'user_unsuspend', 'user', (string) $targetUserId, [
+            'reason' => $reason,
+        ]);
+
+        admin_redirect_with_flash(
+            'admin-users.php#user-' . $targetUserId,
+            'success',
+            $suspend ? 'User suspended.' : 'User reactivated.'
+        );
+
+    default:
+        admin_redirect_with_flash('admin-dashboard.php', 'danger', 'Unknown admin action.');
+}
+?>

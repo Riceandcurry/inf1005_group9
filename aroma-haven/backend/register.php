@@ -1,6 +1,7 @@
 <?php
-require_once 'util.php';
-require_once 'auth.php';
+require_once __DIR__ . '/util.php';
+require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/admin_helpers.php';
 
 function register_process($data){
 
@@ -27,6 +28,19 @@ function register_process($data){
         ");
 
         $stmt->execute([$user_id, $fname, $lname, $brew_style]);
+
+        $customerRoleId = ah_get_role_id('customer');
+        if ($customerRoleId > 0) {
+            $roleStmt = $conn->prepare(
+                'INSERT INTO user_roles (user_id, role_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE user_id = user_roles.user_id'
+            );
+            $roleStmt->execute([$user_id, $customerRoleId]);
+        }
+
+        $statusStmt = $conn->prepare(
+            'INSERT INTO user_status (user_id, is_suspended) VALUES (?, 0) ON DUPLICATE KEY UPDATE user_id = user_status.user_id'
+        );
+        $statusStmt->execute([$user_id]);
 
     } catch (PDOException $e) {
         return $e->getMessage();

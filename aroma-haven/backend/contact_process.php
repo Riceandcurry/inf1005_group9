@@ -5,13 +5,22 @@ function contact_ensure_table(PDO $conn): void
 {
     $conn->exec("
         CREATE TABLE IF NOT EXISTS `contact_submissions` (
-            `id`         INT          NOT NULL AUTO_INCREMENT,
-            `name`       VARCHAR(100) NOT NULL,
-            `email`      VARCHAR(100) NOT NULL,
-            `topic`      VARCHAR(50)  NOT NULL,
-            `message`    TEXT         NOT NULL,
-            `submitted_at` TIMESTAMP  NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`)
+            `id` INT NOT NULL AUTO_INCREMENT,
+            `name` VARCHAR(100) NOT NULL,
+            `email` VARCHAR(100) NOT NULL,
+            `topic` VARCHAR(50) NOT NULL,
+            `message` TEXT NOT NULL,
+            `status` ENUM('new', 'in_progress', 'resolved') NOT NULL DEFAULT 'new',
+            `internal_note` TEXT DEFAULT NULL,
+            `replied_at` DATETIME DEFAULT NULL,
+            `replied_by` INT DEFAULT NULL,
+            `submitted_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            KEY `idx_contact_submissions_status` (`status`),
+            KEY `idx_contact_submissions_replied_by` (`replied_by`),
+            CONSTRAINT `fk_contact_submissions_replied_by`
+              FOREIGN KEY (`replied_by`) REFERENCES `phpauth_users` (`id`)
+              ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
     ");
 }
