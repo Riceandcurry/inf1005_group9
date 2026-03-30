@@ -1,9 +1,6 @@
 <?php
-// profile.php
-
 session_start();
 require_once '../backend/auth_guard.php'; // Ensure user is logged in
-
 require_once '../backend/init.php'; // DB connection
 require_once '../backend/profile_process.php';
 require_login();
@@ -14,24 +11,24 @@ $err = '';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    if ($action === 'update_details') {
-        $fname = sanitize_input($_POST['fname'] ?? '');
-        $lname = sanitize_input($_POST['lname'] ?? '');
-        $email = sanitize_input($_POST['email'] ?? '');
-        update_profile_details($user_id, $fname, $lname, $email);
-        $msg = 'Profile updated successfully!';
-    } elseif ($action === 'change_password') {
-        $current = $_POST['current_password'] ?? '';
-        $new = $_POST['new_password'] ?? '';
-        $confirm = $_POST['confirm_password'] ?? '';
-        $result = change_profile_password($auth, $auth->getCurrentUser()['email'], $current, $new, $confirm);
-        if ($result['error']) {
-            $err = $result['message'];
-        } else {
-            $msg = 'Password changed successfully!';
+        $action = $_POST['action'] ?? '';
+        if ($action === 'update_details') {
+                $fname = sanitize_input($_POST['fname'] ?? '');
+                $lname = sanitize_input($_POST['lname'] ?? '');
+                $email = sanitize_input($_POST['email'] ?? '');
+                update_profile_details($user_id, $fname, $lname, $email);
+                $msg = 'Profile updated successfully!';
+        } elseif ($action === 'change_password') {
+                $current = $_POST['current_password'] ?? '';
+                $new = $_POST['new_password'] ?? '';
+                $confirm = $_POST['confirm_password'] ?? '';
+                $result = change_profile_password($auth, $auth->getCurrentUser()['email'], $current, $new, $confirm);
+                if ($result['error']) {
+                        $err = $result['message'];
+                } else {
+                        $msg = 'Password changed successfully!';
+                }
         }
-    }
 }
 
 // Fetch user details for display
@@ -46,39 +43,46 @@ $profile = $stmt2->fetch(PDO::FETCH_ASSOC);
 $fname = $profile['fname'] ?? '';
 $lname = $profile['lname'] ?? '';
 
+$pageTitle = 'My Account | Aroma Haven';
+$bodyClass = 'ah-profile-main';
+include __DIR__ . '/../includes/header.php';
+include __DIR__ . '/../includes/navbar.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
-    <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-<?php include '../includes/navbar.php'; ?>
-<main class="ah-profile-main py-5" style="background: var(--ah-steamed); min-height: 100vh;">
-    <div class="container">
+
+<main class="ah-profile-main">
+        <!-- Hero/banner section -->
+        <section class="ah-hero" style="background: var(--ah-steamed); min-height: 220px;">
+            <div class="container h-100 d-flex flex-column justify-content-center align-items-center" style="min-height:220px;">
+                <h1 class="ah-hero-title mb-1 mx-auto" style="font-family: var(--ah-font-serif);font-size:2.2rem;">My Account</h1>
+                <p class="ah-hero-lead mb-0 text-cortado mx-auto">Manage your Aroma Haven account settings</p>
+            </div>
+        </section>
+
+    <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-lg-10 col-xl-9">
                 <div class="card shadow ah-profile-card mx-auto w-100" style="border-radius:1.3rem; background: #fff; max-width: 980px;">
                     <div class="d-flex flex-column flex-md-row w-100">
-                        <div class="d-flex flex-column align-items-center justify-content-center py-5 px-4 w-100 w-md-33 border-end" style="background:var(--ah-steamed);border-radius:1.3rem 1.3rem 0 0; min-width:220px; min-height: 320px;">
-                            <img src="images/assets/user.png" alt="Profile" style="width:72px;height:72px;border-radius:50%;background:#f6f4ed;object-fit:cover;">
-                            <h5 class="mb-0 mt-3"><?php echo htmlspecialchars($fname . ' ' . $lname); ?></h5>
-                            <div class="text-muted mb-2" style="font-size:0.95em;word-break:break-all;">
-                                <?php echo htmlspecialchars($email); ?>
+                        <div class="d-flex flex-column align-items-center justify-content-center py-5 px-4 w-100 w-md-33 border-end" style="background:var(--ah-steamed);border-radius:1.3rem 1.3rem 0 0; min-width:220px; min-height: 320px; box-shadow:0 2px 16px 0 rgba(0,0,0,0.04); border:1.5px solid #ede9e2;">
+                            <div class="d-flex flex-column align-items-center w-100 mb-3">
+                                <div style="width:64px;height:64px;border-radius:50%;background:#e8e5dd;display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem;">
+                                    <svg width="36" height="36" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="4.5" fill="#b6a98c"/><rect x="4" y="15" width="16" height="5" rx="2.5" fill="#b6a98c"/></svg>
+                                </div>
+                                <h5 class="mb-1" style="font-family:var(--ah-font-serif);font-size:1.35rem;font-weight:600;letter-spacing:-0.5px;line-height:1.2;">
+                                    <?php echo htmlspecialchars($fname . ' ' . $lname); ?>
+                                </h5>
+                                <div class="text-muted mb-0" style="font-size:1.01em;word-break:break-all;letter-spacing:0.01em;">
+                                    <?php echo htmlspecialchars($email); ?>
+                                </div>
                             </div>
-                            <div class="mt-4 w-100">
-                                <div class="text-overline mb-1">Account Stats</div>
-                                <div style="font-size:0.98em;">
-                                    <div><span class="text-cortado">Member</span> <span class="text-espresso">Since</span> <span class="fw-semibold">2025</span></div>
+                            <div class="mt-4 w-100 text-center">
+                                <div class="text-overline mb-1" style="letter-spacing:0.08em;color:#a08c6b;">ACCOUNT STATS</div>
+                                <div style="font-size:1.05em;">
+                                    <span class="text-cortado">Member</span> <span class="text-espresso">Since</span> <span class="fw-semibold">2025</span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex-grow-1 p-4 p-md-5" style="min-width:260px;">
-                            <h1 class="display-6 mb-2" style="font-family: var(--ah-font-serif);">My Account</h1>
-                            <p class="mb-4 text-cortado">Manage your Aroma Haven account settings</p>
                             <ul class="nav nav-tabs mb-4" id="profileTab" role="tablist">
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link active" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="true">Profile Settings</button>
@@ -115,22 +119,26 @@ $lname = $profile['lname'] ?? '';
                                     </form>
                                 </div>
                                 <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
-                                    <form action="profile.php" method="POST" class="row g-3">
+                                    <form action="profile.php" method="POST">
                                         <input type="hidden" name="action" value="change_password">
-                                        <div class="col-12 col-md-4">
-                                            <label for="current_password" class="form-label">Current Password</label>
-                                            <input type="password" id="current_password" name="current_password" class="form-control" required>
+                                        <div class="row align-items-end g-3">
+                                            <div class="col-12 col-md-4 mb-3 mb-md-0">
+                                                <label for="current_password" class="form-label">Current Password</label>
+                                                <input type="password" id="current_password" name="current_password" class="form-control" required style="background:#f5f3ee;">
+                                            </div>
+                                            <div class="col-12 col-md-4 mb-3 mb-md-0">
+                                                <label for="new_password" class="form-label" style="margin-top:6px;">New Password</label>
+                                                <input type="password" id="new_password" name="new_password" class="form-control" required style="background:#f5f3ee;">
+                                            </div>
+                                            <div class="col-12 col-md-4 mb-3 mb-md-0">
+                                                <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                                <input type="password" id="confirm_password" name="confirm_password" class="form-control" required style="background:#f5f3ee;">
+                                            </div>
                                         </div>
-                                        <div class="col-12 col-md-4">
-                                            <label for="new_password" class="form-label">New Password</label>
-                                            <input type="password" id="new_password" name="new_password" class="form-control" required>
-                                        </div>
-                                        <div class="col-12 col-md-4">
-                                            <label for="confirm_password" class="form-label">Confirm New Password</label>
-                                            <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
-                                        </div>
-                                        <div class="col-12 mt-2">
-                                            <button type="submit" class="btn btn-outline-primary px-4">Change Password</button>
+                                        <div class="row">
+                                            <div class="col-12 mt-3">
+                                                <button type="submit" class="btn btn-outline-primary px-4">Change Password</button>
+                                            </div>
                                         </div>
                                     </form>
                                 </div>
@@ -142,6 +150,4 @@ $lname = $profile['lname'] ?? '';
         </div>
     </div>
 </main>
-<?php include '../includes/footer.php'; ?>
-</body>
-</html>
+<?php include __DIR__ . '/../includes/footer.php'; ?>
