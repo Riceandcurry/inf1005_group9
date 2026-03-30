@@ -41,12 +41,16 @@ $ahUserIconLabel = $ahLoggedIn
           <a href="cart.php" class="ah-nav-icon" data-cart-trigger title="Open cart" aria-label="Open cart">
             <img src="images/assets/shopping-bag.png" alt="" aria-hidden="true" style="width:36px;height:36px;object-fit:contain;">
           </a>
-          <a href="/profile.php" class="ah-nav-icon" title="Profile Settings" aria-label="Go to profile" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;object-fit:contain;">
+          <a href="/profile.php" class="ah-nav-icon" title="Profile Settings" aria-label="Go to profile">
             <img src="images/assets/profilesetting.png" alt="Profile Settings" style="width:26px;height:26px;object-fit:contain;" />
           </a>
-          <a href="/route.php?route=logout" class="ah-nav-icon" title="Logout" aria-label="Logout" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;object-fit:contain;">
-            <img src="images/assets/log-out.png" alt="Logout" style="width:26px;height:26px;object-fit:contain;" />
-          </a>
+          <form action="/route.php" method="POST" style="display:inline;margin:0;padding:0;">
+            <input type="hidden" name="action" value="logout">
+            <input type="hidden" name="csrf_token" value="<?php echo isset($_SESSION['csrf_token']) ? htmlspecialchars($_SESSION['csrf_token']) : ''; ?>">
+            <button type="submit" class="ah-nav-icon" title="Logout" aria-label="Logout">
+              <img src="images/assets/log-out.png" alt="Logout" style="width:26px;height:26px;object-fit:contain;" />
+            </button>
+          </form>
         <?php } else { ?>
           <a href="cart.php" class="ah-nav-icon" data-cart-trigger title="Open cart" aria-label="Open cart">
             <img src="images/assets/shopping-bag.png" alt="" aria-hidden="true" style="width:36px;height:36px;object-fit:contain;">
