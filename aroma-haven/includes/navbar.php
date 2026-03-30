@@ -21,17 +21,24 @@
         require_once __DIR__ . '/../backend/init.php';
         if (isset($auth) && $auth->isLogged()) {
         ?>
+          <a href="cart.php" class="ah-nav-icon" data-cart-trigger title="Open cart" aria-label="Open cart">
+            <img src="images/assets/shopping-bag.png" alt="" aria-hidden="true" style="width:36px;height:36px;object-fit:contain;">
+          </a>
           <a href="/profile.php" class="ah-nav-icon" title="Profile Settings" aria-label="Go to profile" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;object-fit:contain;">
             <img src="images/assets/profilesetting.png" alt="Profile Settings" style="width:26px;height:26px;object-fit:contain;" />
           </a>
+          <a href="/route.php?route=logout" class="ah-nav-icon" title="Logout" aria-label="Logout" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;object-fit:contain;">
+            <img src="images/assets/log-out.png" alt="Logout" style="width:26px;height:26px;object-fit:contain;" />
+          </a>
+        <?php } else { ?>
+          <a href="cart.php" class="ah-nav-icon" data-cart-trigger title="Open cart" aria-label="Open cart">
+            <img src="images/assets/shopping-bag.png" alt="" aria-hidden="true" style="width:36px;height:36px;object-fit:contain;">
+          </a>
+          <a href="login.php" class="ah-nav-icon" title="Login" aria-label="Go to login">
+            <img src="images/assets/user.png" alt="" aria-hidden="true" style="width:36px;height:36px;object-fit:contain;">
+          </a>
         <?php }
         ?>
-        <a href="cart.php" class="ah-nav-icon" data-cart-trigger title="Open cart" aria-label="Open cart">
-          <img src="images/assets/shopping-bag.png" alt="" aria-hidden="true" style="width:36px;height:36px;object-fit:contain;">
-        </a>
-        <a href="login.php" class="ah-nav-icon" title="Login" aria-label="Go to login">
-          <img src="images/assets/user.png" alt="" aria-hidden="true" style="width:36px;height:36px;object-fit:contain;">
-        </a>
       </div>
     </div>
   </div>
