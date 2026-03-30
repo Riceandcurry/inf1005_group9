@@ -34,6 +34,15 @@ $ahUserIconLabel = $ahLoggedIn
         <?php if ($ahIsAdmin): ?>
           <a href="admin-dashboard.php" class="ah-nav-link text-uppercase small" style="letter-spacing:0.08em;">Admin</a>
         <?php endif; ?>
+        <?php
+        require_once __DIR__ . '/../backend/init.php';
+        if (isset($auth) && $auth->isLogged()) {
+        ?>
+          <a href="/profile.php" class="ah-nav-icon" title="Profile Settings" aria-label="Go to profile" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;object-fit:contain;">
+            <img src="images/assets/profilesetting.png" alt="Profile Settings" style="width:26px;height:26px;object-fit:contain;" />
+          </a>
+        <?php }
+        ?>
         <a href="cart.php" class="ah-nav-icon" data-cart-trigger title="Open cart" aria-label="Open cart">
           <img src="images/assets/shopping-bag.png" alt="" aria-hidden="true" style="width:36px;height:36px;object-fit:contain;">
         </a>
