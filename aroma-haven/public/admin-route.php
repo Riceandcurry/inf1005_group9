@@ -48,10 +48,19 @@ try {
 
         if ($name === '' || $origin === '' || $price <= 0) {
             admin_redirect_with_flash('admin-products.php', 'danger', 'Name, origin, and a valid price are required.');
+            exit;
         }
 
         if (!in_array($roastLevel, ['Light', 'Medium', 'Dark'], true)) {
             admin_redirect_with_flash('admin-products.php', 'danger', 'Roast level must be Light, Medium, or Dark.');
+            exit;
+        }
+
+        $productColumns = ah_table_columns('products');
+        foreach (['name', 'origin', 'price'] as $requiredColumn) {
+            if (!isset($productColumns[$requiredColumn])) {
+                admin_redirect_with_flash('admin-products.php', 'danger', 'Products table is missing required column: ' . $requiredColumn);
+            }
         }
 
         $productColumns = ah_table_columns('products');
@@ -113,10 +122,12 @@ try {
             ]);
 
             admin_redirect_with_flash('admin-products.php', 'success', 'Product created successfully.');
+            exit;
         }
 
         if ($productId <= 0) {
             admin_redirect_with_flash('admin-products.php', 'danger', 'Invalid product selected.');
+            exit;
         }
 
         $updateData = $productData;
@@ -147,7 +158,8 @@ try {
         ]);
 
         admin_redirect_with_flash('admin-products.php', 'success', 'Product updated successfully.');
-
+        exit;
+        
     case 'contact_update':
         $submissionId = (int) ($_POST['submission_id'] ?? 0);
         $status = trim((string) ($_POST['status'] ?? 'new'));
@@ -155,6 +167,7 @@ try {
 
         if ($submissionId <= 0 || !in_array($status, ['new', 'in_progress', 'resolved'], true)) {
             admin_redirect_with_flash('admin-contacts.php', 'danger', 'Invalid contact update request.');
+            exit;
         }
 
         $stmt = $conn->prepare('UPDATE contact_submissions SET status = ?, internal_note = ? WHERE id = ?');
@@ -165,6 +178,7 @@ try {
         ]);
 
         admin_redirect_with_flash('admin-contacts.php#contact-' . $submissionId, 'success', 'Contact record updated.');
+        exit;
 
     case 'contact_reply':
         $submissionId = (int) ($_POST['submission_id'] ?? 0);
@@ -173,6 +187,7 @@ try {
 
         if ($submissionId <= 0 || $subject === '' || $body === '') {
             admin_redirect_with_flash('admin-contacts.php', 'danger', 'Reply subject and body are required.');
+            exit;
         }
 
         $stmt = $conn->prepare('SELECT id, name, email FROM contact_submissions WHERE id = ? LIMIT 1');
@@ -181,6 +196,7 @@ try {
 
         if (!$submission) {
             admin_redirect_with_flash('admin-contacts.php', 'danger', 'Contact submission not found.');
+            exit;
         }
 
         $mail = new PHPMailer(true);
@@ -219,7 +235,7 @@ try {
                     'INSERT INTO contact_replies (submission_id, replied_by, reply_subject, reply_body, sent_success, error_message)
                      VALUES (?, ?, ?, ?, ?, ?)'
                 );
-                $replyStmt->execute([$submissionId, $currentUserId, $subject, $body, 1, null]);
+                $replyStmt->execute([$submissionId, $currentUserId, $subject, $body, 1, null]);                
             }
 
             ah_admin_audit($currentUserId, 'contact_reply_sent', 'contact_submission', (string) $submissionId, [
@@ -227,6 +243,7 @@ try {
             ]);
 
             admin_redirect_with_flash('admin-contacts.php#contact-' . $submissionId, 'success', 'Reply email sent successfully.');
+            exit;
         }
 
         if (ah_table_exists('contact_replies')) {
@@ -234,7 +251,7 @@ try {
                 'INSERT INTO contact_replies (submission_id, replied_by, reply_subject, reply_body, sent_success, error_message)
                  VALUES (?, ?, ?, ?, ?, ?)'
             );
-            $replyStmt->execute([$submissionId, $currentUserId, $subject, $body, 0, $error]);
+            $replyStmt->execute([$submissionId, $currentUserId, $subject, $body, 0, $error]);            
         }
 
         ah_admin_audit($currentUserId, 'contact_reply_failed', 'contact_submission', (string) $submissionId, [
@@ -243,11 +260,13 @@ try {
         ]);
 
         admin_redirect_with_flash('admin-contacts.php#contact-' . $submissionId, 'danger', 'Reply could not be sent. Please check mail settings.');
+        exit;
 
     case 'user_toggle_admin':
         $targetUserId = (int) ($_POST['target_user_id'] ?? 0);
         if ($targetUserId <= 0) {
             admin_redirect_with_flash('admin-users.php', 'danger', 'Invalid user selected.');
+            exit;
         }
 
         $currentlyAdmin = ah_user_is_admin($targetUserId);
@@ -255,10 +274,12 @@ try {
 
         if ($targetUserId === $currentUserId && !$makeAdmin) {
             admin_redirect_with_flash('admin-users.php#user-' . $targetUserId, 'danger', 'You cannot remove your own admin access.');
+            exit;
         }
 
         if (!ah_set_user_admin_role($targetUserId, $makeAdmin, $currentUserId)) {
             admin_redirect_with_flash('admin-users.php#user-' . $targetUserId, 'danger', 'Unable to update admin role.');
+            exit;
         }
 
         ah_admin_audit($currentUserId, $makeAdmin ? 'user_promote_admin' : 'user_demote_admin', 'user', (string) $targetUserId);
@@ -268,6 +289,7 @@ try {
             'success',
             $makeAdmin ? 'User promoted to admin.' : 'Admin access revoked.'
         );
+        exit;
 
     case 'user_toggle_suspend':
         $targetUserId = (int) ($_POST['target_user_id'] ?? 0);
@@ -275,10 +297,12 @@ try {
 
         if ($targetUserId <= 0) {
             admin_redirect_with_flash('admin-users.php', 'danger', 'Invalid user selected.');
+            exit;
         }
 
         if ($targetUserId === $currentUserId) {
             admin_redirect_with_flash('admin-users.php#user-' . $targetUserId, 'danger', 'You cannot suspend your own account.');
+            exit;
         }
 
         $currentlySuspended = ah_is_user_suspended($targetUserId);
@@ -286,6 +310,7 @@ try {
 
         if (!ah_set_user_suspension($targetUserId, $suspend, $reason, $currentUserId)) {
             admin_redirect_with_flash('admin-users.php#user-' . $targetUserId, 'danger', 'Unable to update suspension state.');
+            exit;
         }
 
         ah_admin_audit($currentUserId, $suspend ? 'user_suspend' : 'user_unsuspend', 'user', (string) $targetUserId, [
@@ -297,6 +322,7 @@ try {
             'success',
             $suspend ? 'User suspended.' : 'User reactivated.'
         );
+        exit;
 
     default:
         admin_redirect_with_flash('admin-dashboard.php', 'danger', 'Unknown admin action.');
@@ -314,5 +340,6 @@ try {
     }
 
     admin_redirect_with_flash($fallback, 'danger', 'Admin action failed. Please verify database columns and try again.');
+    exit;
 }
 ?>
