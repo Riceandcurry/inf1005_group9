@@ -1,3 +1,17 @@
+<?php
+require_once __DIR__ . '/../backend/auth.php';
+require_once __DIR__ . '/../backend/admin_helpers.php';
+
+$ahCurrentUserId = ah_current_user_id();
+$ahLoggedIn = $ahCurrentUserId > 0;
+$ahIsAdmin = $ahLoggedIn && ah_user_is_admin($ahCurrentUserId);
+$ahUserIconHref = $ahLoggedIn
+  ? ($ahIsAdmin ? 'admin-dashboard.php' : 'shop-coffee.php')
+  : 'login.php';
+$ahUserIconLabel = $ahLoggedIn
+  ? ($ahIsAdmin ? 'Open admin dashboard' : 'Open account')
+  : 'Go to login';
+?>
 <a class="ah-global-skip-link" href="#ah-page-content">Skip to main content</a>
 
 <nav class="navbar navbar-expand-lg ah-navbar py-0">
@@ -17,6 +31,9 @@
         <li class="nav-item"><a class="nav-link ah-nav-link" href="contact-us.php">Contact Us</a></li>
       </ul>
       <div class="d-flex align-items-center gap-4 mb-3 mb-lg-0">
+        <?php if ($ahIsAdmin): ?>
+          <a href="admin-dashboard.php" class="ah-nav-link text-uppercase small" style="letter-spacing:0.08em;">Admin</a>
+        <?php endif; ?>
         <?php
         require_once __DIR__ . '/../backend/init.php';
         if (isset($auth) && $auth->isLogged()) {
@@ -34,7 +51,7 @@
           <a href="cart.php" class="ah-nav-icon" data-cart-trigger title="Open cart" aria-label="Open cart">
             <img src="images/assets/shopping-bag.png" alt="" aria-hidden="true" style="width:36px;height:36px;object-fit:contain;">
           </a>
-          <a href="login.php" class="ah-nav-icon" title="Login" aria-label="Go to login">
+          <a href="<?php echo htmlspecialchars($ahUserIconHref, ENT_QUOTES, 'UTF-8'); ?>" class="ah-nav-icon" title="Account" aria-label="<?php echo htmlspecialchars($ahUserIconLabel, ENT_QUOTES, 'UTF-8'); ?>">
             <img src="images/assets/user.png" alt="" aria-hidden="true" style="width:36px;height:36px;object-fit:contain;">
           </a>
         <?php }
