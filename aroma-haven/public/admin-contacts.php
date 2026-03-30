@@ -10,8 +10,12 @@ require_admin();
 $conn = connect_db();
 $flash = ah_admin_pull_flash();
 $statusFilter = trim((string) ($_GET['status'] ?? 'all'));
+$contactColumns = ah_table_columns('contact_submissions');
+$hasStatusColumn = isset($contactColumns['status']);
+$hasInternalNoteColumn = isset($contactColumns['internal_note']);
+$hasRepliedAtColumn = isset($contactColumns['replied_at']);
 
-if ($statusFilter !== 'all' && in_array($statusFilter, ['new', 'in_progress', 'resolved'], true)) {
+if ($hasStatusColumn && $statusFilter !== 'all' && in_array($statusFilter, ['new', 'in_progress', 'resolved'], true)) {
     $stmt = $conn->prepare('SELECT * FROM contact_submissions WHERE status = ? ORDER BY submitted_at DESC, id DESC');
     $stmt->execute([$statusFilter]);
 } else {
@@ -52,8 +56,11 @@ include __DIR__ . '/../includes/navbar.php';
             <option value="<?php echo $value; ?>" <?php echo ($statusFilter === $value) ? 'selected' : ''; ?>><?php echo $label; ?></option>
           <?php endforeach; ?>
         </select>
-        <button class="btn btn-outline-secondary" type="submit">Apply</button>
+        <button class="btn btn-outline-secondary" type="submit" <?php echo $hasStatusColumn ? '' : 'disabled'; ?>>Apply</button>
       </form>
+      <?php if (!$hasStatusColumn): ?>
+        <p class="small text-muted mb-0">Status filtering is unavailable because `contact_submissions.status` is not present in this database.</p>
+      <?php endif; ?>
     </div>
   </section>
 
@@ -82,7 +89,7 @@ include __DIR__ . '/../includes/navbar.php';
             <div class="text-lg-end">
               <span class="badge text-bg-secondary"><?php echo htmlspecialchars($status, ENT_QUOTES, 'UTF-8'); ?></span>
               <p class="text-muted small mb-0 mt-1">Submitted: <?php echo htmlspecialchars((string) ($contact['submitted_at'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
-              <?php if (!empty($contact['replied_at'])): ?>
+              <?php if ($hasRepliedAtColumn && !empty($contact['replied_at'])): ?>
                 <p class="text-success small mb-0">Replied: <?php echo htmlspecialchars((string) $contact['replied_at'], ENT_QUOTES, 'UTF-8'); ?></p>
               <?php endif; ?>
             </div>
@@ -95,21 +102,31 @@ include __DIR__ . '/../includes/navbar.php';
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
             <input type="hidden" name="submission_id" value="<?php echo $contactId; ?>">
 
-            <div class="col-md-4">
-              <label class="form-label">Status</label>
-              <select class="form-select" name="status">
-                <?php foreach (['new' => 'New', 'in_progress' => 'In Progress', 'resolved' => 'Resolved'] as $value => $label): ?>
-                  <option value="<?php echo $value; ?>" <?php echo ($status === $value) ? 'selected' : ''; ?>><?php echo $label; ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-md-8">
-              <label class="form-label">Internal Note</label>
-              <input class="form-control" type="text" name="internal_note" value="<?php echo htmlspecialchars((string) ($contact['internal_note'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" placeholder="Internal handling note">
-            </div>
-            <div class="col-12">
-              <button class="btn btn-outline-primary" type="submit">Update Contact Record</button>
-            </div>
+            <?php if ($hasStatusColumn): ?>
+              <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="status">
+                  <?php foreach (['new' => 'New', 'in_progress' => 'In Progress', 'resolved' => 'Resolved'] as $value => $label): ?>
+                    <option value="<?php echo $value; ?>" <?php echo ($status === $value) ? 'selected' : ''; ?>><?php echo $label; ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+            <?php endif; ?>
+            <?php if ($hasInternalNoteColumn): ?>
+              <div class="<?php echo $hasStatusColumn ? 'col-md-8' : 'col-12'; ?>">
+                <label class="form-label">Internal Note</label>
+                <input class="form-control" type="text" name="internal_note" value="<?php echo htmlspecialchars((string) ($contact['internal_note'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" placeholder="Internal handling note">
+              </div>
+            <?php endif; ?>
+            <?php if ($hasStatusColumn || $hasInternalNoteColumn): ?>
+              <div class="col-12">
+                <button class="btn btn-outline-primary" type="submit">Update Contact Record</button>
+              </div>
+            <?php else: ?>
+              <div class="col-12">
+                <p class="small text-muted mb-0">No editable contact metadata columns are available in this database.</p>
+              </div>
+            <?php endif; ?>
           </form>
 
           <form action="admin-route.php" method="post" class="row g-3">

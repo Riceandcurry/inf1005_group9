@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../backend/init.php';
 require_once __DIR__ . '/../backend/admin_guard.php';
 require_once __DIR__ . '/../backend/admin_helpers.php';
+require_once __DIR__ . '/../backend/env.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -54,13 +55,6 @@ try {
         if (!in_array($roastLevel, ['Light', 'Medium', 'Dark'], true)) {
             admin_redirect_with_flash('admin-products.php', 'danger', 'Roast level must be Light, Medium, or Dark.');
             exit;
-        }
-
-        $productColumns = ah_table_columns('products');
-        foreach (['name', 'origin', 'price'] as $requiredColumn) {
-            if (!isset($productColumns[$requiredColumn])) {
-                admin_redirect_with_flash('admin-products.php', 'danger', 'Products table is missing required column: ' . $requiredColumn);
-            }
         }
 
         $productColumns = ah_table_columns('products');
@@ -170,8 +164,27 @@ try {
             exit;
         }
 
-        $stmt = $conn->prepare('UPDATE contact_submissions SET status = ?, internal_note = ? WHERE id = ?');
-        $stmt->execute([$status, $internalNote, $submissionId]);
+        $contactColumns = ah_table_columns('contact_submissions');
+        $setClauses = [];
+        $setValues = [];
+
+        if (isset($contactColumns['status'])) {
+            $setClauses[] = '`status` = ?';
+            $setValues[] = $status;
+        }
+        if (isset($contactColumns['internal_note'])) {
+            $setClauses[] = '`internal_note` = ?';
+            $setValues[] = $internalNote;
+        }
+
+        if (empty($setClauses)) {
+            admin_redirect_with_flash('admin-contacts.php', 'danger', 'contact_submissions table is missing editable admin columns (status/internal_note).');
+            exit;
+        }
+
+        $setValues[] = $submissionId;
+        $stmt = $conn->prepare('UPDATE contact_submissions SET ' . implode(', ', $setClauses) . ' WHERE id = ?');
+        $stmt->execute($setValues);
 
         ah_admin_audit($currentUserId, 'contact_update', 'contact_submission', (string) $submissionId, [
             'status' => $status,
@@ -204,16 +217,40 @@ try {
         $error = null;
 
         try {
-            $mail->isSMTP();
-            $mail->Host = $_ENV['MAIL_HOST'] ?? '';
-            $mail->SMTPAuth = true;
-            $mail->Username = $_ENV['MAIL_USER'] ?? '';
-            $mail->Password = $_ENV['MAIL_PASS'] ?? '';
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = (int) ($_ENV['MAIL_PORT'] ?? 587);
+            $mailHost = (string) ah_env('MAIL_HOST', '');
+            $mailUser = (string) ah_env('MAIL_USER', '');
+            $mailPass = (string) ah_env('MAIL_PASS', '');
+            $mailPort = (int) ah_env('MAIL_PORT', '587');
+            $mailEncryption = strtolower((string) ah_env('MAIL_ENCRYPTION', 'tls'));
+            $mailAuthRaw = strtolower((string) ah_env('MAIL_SMTP_AUTH', 'true'));
+            $mailAuth = !in_array($mailAuthRaw, ['0', 'false', 'no', 'off'], true);
 
-            $fromAddress = $_ENV['MAIL_USER'] ?? 'no-reply@localhost';
-            $fromName = $_ENV['MAIL_FROM_NAME'] ?? 'Aroma Haven';
+            if ($mailHost === '') {
+                throw new Exception('MAIL_HOST is empty.');
+            }
+            if ($mailAuth && $mailUser === '') {
+                throw new Exception('MAIL_USER is empty while SMTP auth is enabled.');
+            }
+
+            $mail->isSMTP();
+            $mail->Host = $mailHost;
+            $mail->SMTPAuth = $mailAuth;
+            $mail->Username = $mailUser;
+            $mail->Password = $mailPass;
+            $mail->Port = $mailPort > 0 ? $mailPort : 587;
+            $mail->CharSet = 'UTF-8';
+
+            if (in_array($mailEncryption, ['ssl', 'smtps'], true)) {
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+            } elseif (in_array($mailEncryption, ['tls', 'starttls'], true)) {
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            } else {
+                $mail->SMTPSecure = '';
+                $mail->SMTPAutoTLS = false;
+            }
+
+            $fromAddress = (string) ah_env('MAIL_FROM_ADDRESS', $mailUser !== '' ? $mailUser : 'no-reply@localhost');
+            $fromName = (string) ah_env('MAIL_FROM_NAME', 'Aroma Haven');
             $mail->setFrom($fromAddress, $fromName);
             $mail->addAddress((string) $submission['email'], (string) ($submission['name'] ?? ''));
             $mail->isHTML(true);
@@ -227,8 +264,27 @@ try {
         }
 
         if ($sent) {
-            $stmt = $conn->prepare('UPDATE contact_submissions SET status = ?, replied_at = NOW(), replied_by = ? WHERE id = ?');
-            $stmt->execute(['resolved', $currentUserId, $submissionId]);
+            $contactColumns = ah_table_columns('contact_submissions');
+            $setClauses = [];
+            $setValues = [];
+
+            if (isset($contactColumns['status'])) {
+                $setClauses[] = '`status` = ?';
+                $setValues[] = 'resolved';
+            }
+            if (isset($contactColumns['replied_at'])) {
+                $setClauses[] = '`replied_at` = NOW()';
+            }
+            if (isset($contactColumns['replied_by'])) {
+                $setClauses[] = '`replied_by` = ?';
+                $setValues[] = $currentUserId;
+            }
+
+            if (!empty($setClauses)) {
+                $setValues[] = $submissionId;
+                $stmt = $conn->prepare('UPDATE contact_submissions SET ' . implode(', ', $setClauses) . ' WHERE id = ?');
+                $stmt->execute($setValues);
+            }
 
             if (ah_table_exists('contact_replies')) {
                 $replyStmt = $conn->prepare(
@@ -259,7 +315,16 @@ try {
             'error' => $error,
         ]);
 
-        admin_redirect_with_flash('admin-contacts.php#contact-' . $submissionId, 'danger', 'Reply could not be sent. Please check mail settings.');
+        $safeError = trim((string) $error);
+        if ($safeError !== '') {
+            $safeError = preg_replace('/\s+/', ' ', $safeError);
+            $safeError = substr($safeError, 0, 220);
+        }
+        $message = $safeError !== ''
+            ? 'Reply could not be sent. Mail error: ' . $safeError
+            : 'Reply could not be sent. Please check mail settings.';
+
+        admin_redirect_with_flash('admin-contacts.php#contact-' . $submissionId, 'danger', $message);
         exit;
 
     case 'user_toggle_admin':
