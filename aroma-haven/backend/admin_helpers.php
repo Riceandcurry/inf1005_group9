@@ -146,6 +146,47 @@ function ah_table_exists(string $tableName): bool
     return (bool) $stmt->fetchColumn();
 }
 
+function ah_table_columns(string $tableName): array
+{
+    static $cache = [];
+
+    if (isset($cache[$tableName])) {
+        return $cache[$tableName];
+    }
+
+    if ($tableName === '' || !preg_match('/^[a-zA-Z0-9_]+$/', $tableName)) {
+        return [];
+    }
+
+    $conn = connect_db();
+    $columns = [];
+
+    try {
+        $stmt = $conn->query('SHOW COLUMNS FROM `' . $tableName . '`');
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $field = (string) ($row['Field'] ?? '');
+            if ($field !== '') {
+                $columns[$field] = true;
+            }
+        }
+    } catch (PDOException $e) {
+        $columns = [];
+    }
+
+    $cache[$tableName] = $columns;
+    return $columns;
+}
+
+function ah_column_exists(string $tableName, string $columnName): bool
+{
+    if ($columnName === '') {
+        return false;
+    }
+
+    $columns = ah_table_columns($tableName);
+    return isset($columns[$columnName]);
+}
+
 function ah_admin_audit(int $adminUserId, string $actionType, string $targetType, string $targetId, array $details = []): void
 {
     if (!ah_table_exists('admin_audit_logs') || $adminUserId <= 0) {

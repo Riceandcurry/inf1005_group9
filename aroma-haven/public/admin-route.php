@@ -30,7 +30,8 @@ $action = (string) ($_POST['action'] ?? '');
 $currentUserId = ah_current_user_id();
 $conn = connect_db();
 
-switch ($action) {
+try {
+    switch ($action) {
     case 'product_create':
     case 'product_update':
         $productId = (int) ($_POST['product_id'] ?? 0);
@@ -53,30 +54,57 @@ switch ($action) {
             admin_redirect_with_flash('admin-products.php', 'danger', 'Roast level must be Light, Medium, or Dark.');
         }
 
+        $productColumns = ah_table_columns('products');
+        foreach (['name', 'origin', 'price'] as $requiredColumn) {
+            if (!isset($productColumns[$requiredColumn])) {
+                admin_redirect_with_flash('admin-products.php', 'danger', 'Products table is missing required column: ' . $requiredColumn);
+            }
+        }
+
         $tags = array_values(array_filter(array_map('trim', explode(',', $tagsCsv)), function ($value) {
             return $value !== '';
         }));
         $tagsJson = !empty($tags) ? json_encode($tags, JSON_UNESCAPED_UNICODE) : null;
 
+        $productData = [
+            'name' => $name,
+            'origin' => $origin,
+            'price' => $price,
+            'roast_level' => $roastLevel,
+            'image' => $image,
+            'tasting_notes' => $tagsJson,
+            'description' => $description,
+            'process' => $process,
+            'altitude' => $altitude,
+            'is_active' => $isActive,
+        ];
+
         if ($action === 'product_create') {
-            $slug = ah_unique_product_slug($name);
-            $stmt = $conn->prepare(
-                'INSERT INTO products (slug, name, origin, price, roast_level, image, tasting_notes, description, process, altitude, is_active)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-            );
-            $stmt->execute([
-                $slug,
-                $name,
-                $origin,
-                $price,
-                $roastLevel,
-                $image,
-                $tagsJson,
-                $description,
-                $process,
-                $altitude,
-                $isActive,
-            ]);
+            $insertColumns = [];
+            $insertValues = [];
+
+            if (isset($productColumns['slug'])) {
+                $insertColumns[] = 'slug';
+                $insertValues[] = ah_unique_product_slug($name);
+            }
+
+            foreach ($productData as $column => $value) {
+                if (isset($productColumns[$column])) {
+                    $insertColumns[] = $column;
+                    $insertValues[] = $value;
+                }
+            }
+
+            if (empty($insertColumns)) {
+                admin_redirect_with_flash('admin-products.php', 'danger', 'No compatible product columns found for insert.');
+            }
+
+            $columnSql = implode(', ', array_map(function ($column) {
+                return '`' . $column . '`';
+            }, $insertColumns));
+            $placeholderSql = implode(', ', array_fill(0, count($insertColumns), '?'));
+            $stmt = $conn->prepare('INSERT INTO products (' . $columnSql . ') VALUES (' . $placeholderSql . ')');
+            $stmt->execute($insertValues);
 
             $newId = (int) $conn->lastInsertId();
             ah_admin_audit($currentUserId, 'product_create', 'product', (string) $newId, [
@@ -91,26 +119,27 @@ switch ($action) {
             admin_redirect_with_flash('admin-products.php', 'danger', 'Invalid product selected.');
         }
 
-        $slug = ah_unique_product_slug($name, $productId);
-        $stmt = $conn->prepare(
-            'UPDATE products
-             SET slug = ?, name = ?, origin = ?, price = ?, roast_level = ?, image = ?, tasting_notes = ?, description = ?, process = ?, altitude = ?, is_active = ?
-             WHERE id = ?'
-        );
-        $stmt->execute([
-            $slug,
-            $name,
-            $origin,
-            $price,
-            $roastLevel,
-            $image,
-            $tagsJson,
-            $description,
-            $process,
-            $altitude,
-            $isActive,
-            $productId,
-        ]);
+        $updateData = $productData;
+        if (isset($productColumns['slug'])) {
+            $updateData['slug'] = ah_unique_product_slug($name, $productId);
+        }
+
+        $setClauses = [];
+        $setValues = [];
+        foreach ($updateData as $column => $value) {
+            if (isset($productColumns[$column])) {
+                $setClauses[] = '`' . $column . '` = ?';
+                $setValues[] = $value;
+            }
+        }
+
+        if (empty($setClauses)) {
+            admin_redirect_with_flash('admin-products.php', 'danger', 'No compatible product columns found for update.');
+        }
+
+        $setValues[] = $productId;
+        $stmt = $conn->prepare('UPDATE products SET ' . implode(', ', $setClauses) . ' WHERE id = ?');
+        $stmt->execute($setValues);
 
         ah_admin_audit($currentUserId, 'product_update', 'product', (string) $productId, [
             'name' => $name,
@@ -271,5 +300,19 @@ switch ($action) {
 
     default:
         admin_redirect_with_flash('admin-dashboard.php', 'danger', 'Unknown admin action.');
+    }
+} catch (Throwable $e) {
+    error_log('[admin-route] action=' . $action . ' failed: ' . $e->getMessage());
+
+    $fallback = 'admin-dashboard.php';
+    if (in_array($action, ['product_create', 'product_update'], true)) {
+        $fallback = 'admin-products.php';
+    } elseif (in_array($action, ['contact_update', 'contact_reply'], true)) {
+        $fallback = 'admin-contacts.php';
+    } elseif (in_array($action, ['user_toggle_admin', 'user_toggle_suspend'], true)) {
+        $fallback = 'admin-users.php';
+    }
+
+    admin_redirect_with_flash($fallback, 'danger', 'Admin action failed. Please verify database columns and try again.');
 }
 ?>
