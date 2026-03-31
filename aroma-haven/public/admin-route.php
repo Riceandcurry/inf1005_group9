@@ -17,25 +17,8 @@ function admin_redirect_with_flash(string $location, string $type, string $messa
 
 function admin_env_value(string $key, string $default = ''): string
 {
-    $candidates = [
-        ah_env($key, null),
-        $_ENV[$key] ?? null,
-        (getenv($key) !== false ? getenv($key) : null),
-        $default,
-    ];
-
-    foreach ($candidates as $candidate) {
-        if ($candidate === null) {
-            continue;
-        }
-
-        $value = trim((string) $candidate);
-        if ($value !== '') {
-            return $value;
-        }
-    }
-
-    return '';
+    $value = ah_env($key, $default);
+    return trim((string) $value);
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

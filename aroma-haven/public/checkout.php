@@ -3,26 +3,10 @@ require_once __DIR__ . '/../backend/auth_guard.php';
 require_login();
 $pageTitle = 'Checkout — Aroma Haven';
 
-$paypalClientId = '';
-$paypalCurrency = 'USD';
-$envPath = __DIR__ . '/../.env';
-if (is_readable($envPath)) {
-  $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-  foreach ($lines as $line) {
-    $line = trim($line);
-    if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
-      continue;
-    }
-    [$k, $v] = explode('=', $line, 2);
-    $k = trim($k);
-    $v = trim($v, " \t\n\r\0\x0B\"'");
-    if ($k === 'PAYPAL_CLIENT_ID') {
-      $paypalClientId = $v;
-    }
-    if ($k === 'PAYPAL_CURRENCY' && $v !== '') {
-      $paypalCurrency = strtoupper($v);
-    }
-  }
+$paypalClientId = (string) ah_env('PAYPAL_CLIENT_ID', '');
+$paypalCurrency = strtoupper((string) ah_env('PAYPAL_CURRENCY', 'USD'));
+if (!preg_match('/^[A-Z]{3}$/', $paypalCurrency)) {
+  $paypalCurrency = 'USD';
 }
 
 include __DIR__ . '/../includes/header.php';

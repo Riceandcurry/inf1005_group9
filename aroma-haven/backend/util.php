@@ -1,5 +1,6 @@
 <?php
     require __DIR__ . '/../vendor/autoload.php';
+    require_once __DIR__ . '/env.php';
 
     // Centralize application error logging for production (PHP-FPM).
     ini_set('log_errors', '1');
@@ -33,14 +34,11 @@
     }
 
     function connect_db(){
-        $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
-        $dotenv->load();
-
-        $host = $_ENV['DB_HOST'];
-        $user = $_ENV['DB_USER'];
-        $pass = $_ENV['DB_PASS'];
-        $db   = $_ENV['DB_NAME'];
-        $port = $_ENV['DB_PORT'];
+        $host = (string) ah_env('DB_HOST', '');
+        $user = (string) ah_env('DB_USER', '');
+        $pass = (string) ah_env('DB_PASS', '');
+        $db   = (string) ah_env('DB_NAME', '');
+        $port = (string) ah_env('DB_PORT', '3306');
 
         $dsn = "mysql:host=$host;dbname=$db;port=$port;charset=utf8mb4";
         try {
