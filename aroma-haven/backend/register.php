@@ -43,7 +43,10 @@ function register_process($data){
         $statusStmt->execute([$user_id]);
 
     } catch (PDOException $e) {
-        return $e->getMessage();
+        ah_log_error('register_process_db_error', $e, [
+            'user_id' => $user_id,
+        ]);
+        return 'Unable to create your account right now. Please try again later.';
     }
 
     return "";

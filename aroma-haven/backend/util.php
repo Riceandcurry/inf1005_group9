@@ -1,5 +1,37 @@
 <?php
     require __DIR__ . '/../vendor/autoload.php';
+
+    // Centralize application error logging for production (PHP-FPM).
+    ini_set('log_errors', '1');
+    ini_set('error_log', '/var/log/php8.1-fpm.log');
+
+    function ah_log_error(string $context, ?Throwable $exception = null, array $meta = []): void
+    {
+        $payload = [
+            'app' => 'aroma-haven',
+            'context' => $context,
+            'meta' => $meta,
+        ];
+
+        if ($exception !== null) {
+            $payload['exception'] = [
+                'class' => get_class($exception),
+                'message' => $exception->getMessage(),
+                'code' => $exception->getCode(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ];
+        }
+
+        $encoded = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($encoded === false) {
+            error_log('[aroma-haven] logging failure: unable to encode payload');
+            return;
+        }
+
+        error_log('[aroma-haven] ' . $encoded);
+    }
+
     function connect_db(){
         $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
         $dotenv->load();
@@ -16,7 +48,13 @@
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             return $conn;
         } catch (PDOException $e) {
-            die("DB Connection failed: " . $e->getMessage());
+            ah_log_error('db_connection_failed', $e, [
+                'db_host' => $host,
+                'db_name' => $db,
+                'db_port' => $port,
+            ]);
+            http_response_code(500);
+            exit('Service temporarily unavailable. Please try again later.');
         }
     }
     function sanitize_input($data){
