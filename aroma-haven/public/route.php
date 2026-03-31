@@ -10,13 +10,26 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 $action = $_POST['action'] ?? '';
 if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'] ?? '')) {
-    die("Invalid CSRF token");
+    ah_log_error('route_csrf_validation_failed', null, [
+        'action' => $action,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+    ]);
+    $_SESSION['error'] = 'Your session expired. Please try again.';
+    $redirect = ($action === 'register') ? 'register.php' : 'login.php';
+    header('Location: ' . $redirect);
+    exit;
 }
 switch ($action) {
     case 'login':
         $_SESSION['login_attempts'] = ($_SESSION['login_attempts'] ?? 0) + 1;
         if ($_SESSION['login_attempts'] > 5) {
-            die("Too many attempts. Try again later.");
+            ah_log_error('route_login_rate_limited', null, [
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+                'attempts' => (int) $_SESSION['login_attempts'],
+            ]);
+            $_SESSION['error'] = 'Too many attempts. Try again later.';
+            header('Location: login.php');
+            exit;
         }
         $result = login_process($_POST);
         if (empty($result)) {
@@ -35,9 +48,7 @@ switch ($action) {
             }
             $_SESSION['otp_pending_user_id'] = $userId;
             $_SESSION['otp_pending_email']   = $userEmail;
-            if (isset($_COOKIE['phpauth_session_cookie'])) {
-                $auth->logout($_COOKIE['phpauth_session_cookie']);
-            }
+            $_SESSION['otp_verified'] = false;
             otp_generate_and_send($userId, $userEmail);
             header("Location: verify-otp.php");
             exit;
@@ -61,6 +72,7 @@ switch ($action) {
         if (isset($_COOKIE['phpauth_session_cookie'])) {
             $auth->logout($_COOKIE['phpauth_session_cookie']);
         }
+        unset($_SESSION['otp_pending_user_id'], $_SESSION['otp_pending_email'], $_SESSION['otp_verified']);
         session_destroy();
         header("Location: login.php");
         exit;

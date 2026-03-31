@@ -15,18 +15,44 @@ function otp_generate_and_send(int $userId, string $toEmail): bool
         "INSERT INTO otp_codes (user_id, code, expires_at) VALUES (?, ?, ?)"
     );
     $stmt->execute([$userId, $code, $expiresAt]);
-    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
-    $dotenv->load();
+
+    $mailHost = (string) ah_env('MAIL_HOST', '');
+    $mailUser = (string) ah_env('MAIL_USER', '');
+    $mailPass = (string) ah_env('MAIL_PASS', '');
+    $mailPort = (int) ah_env('MAIL_PORT', '587');
+    $mailFromName = (string) ah_env('MAIL_FROM_NAME', 'Aroma Haven');
+    $mailEncryption = strtolower((string) ah_env('MAIL_ENCRYPTION', 'tls'));
+    $mailAuthRaw = strtolower((string) ah_env('MAIL_SMTP_AUTH', 'true'));
+    $mailAuth = !in_array($mailAuthRaw, ['0', 'false', 'no', 'off'], true);
+
+    if ($mailHost === '' || ($mailAuth && $mailUser === '')) {
+        ah_log_error('otp_mail_config_missing', null, [
+            'mail_host_present' => $mailHost !== '',
+            'mail_user_present' => $mailUser !== '',
+            'smtp_auth' => $mailAuth,
+        ]);
+        return false;
+    }
+
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
-        $mail->Host       = $_ENV['MAIL_HOST'];
-        $mail->SMTPAuth   = true;
-        $mail->Username   = $_ENV['MAIL_USER'];
-        $mail->Password   = $_ENV['MAIL_PASS'];
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = (int) $_ENV['MAIL_PORT'];
-        $mail->setFrom($_ENV['MAIL_USER'], $_ENV['MAIL_FROM_NAME'] ?? 'Aroma Haven');
+        $mail->Host = $mailHost;
+        $mail->SMTPAuth = $mailAuth;
+        $mail->Username = $mailUser;
+        $mail->Password = $mailPass;
+        $mail->Port = $mailPort > 0 ? $mailPort : 587;
+
+        if (in_array($mailEncryption, ['ssl', 'smtps'], true)) {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        } elseif (in_array($mailEncryption, ['tls', 'starttls'], true)) {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        } else {
+            $mail->SMTPSecure = '';
+            $mail->SMTPAutoTLS = false;
+        }
+
+        $mail->setFrom($mailUser !== '' ? $mailUser : 'no-reply@localhost', $mailFromName);
         $mail->addAddress($toEmail);
         $mail->isHTML(true);
         $mail->Subject = 'Your Aroma Haven verification code';
@@ -44,6 +70,10 @@ function otp_generate_and_send(int $userId, string $toEmail): bool
         $mail->send();
         return true;
     } catch (Exception $e) {
+        ah_log_error('otp_mail_send_failed', $e, [
+            'user_id' => $userId,
+            'recipient' => $toEmail,
+        ]);
         return false;
     }
 }

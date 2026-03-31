@@ -10,18 +10,23 @@ $contactError   = '';
 $contactSticky  = []; // repopulate fields on error
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $contactError = contact_process($_POST);
-
-    if ($contactError === '') {
-        $contactSuccess = true;
+    $postedCsrf = (string) ($_POST['csrf_token'] ?? '');
+    if (empty($_SESSION['csrf_token']) || !hash_equals((string) $_SESSION['csrf_token'], $postedCsrf)) {
+        $contactError = 'Invalid request token. Please refresh and try again.';
     } else {
-        // Keep values so the user doesn't have to retype everything
-        $contactSticky = [
-            'name'    => htmlspecialchars($_POST['name']    ?? '', ENT_QUOTES, 'UTF-8'),
-            'email'   => htmlspecialchars($_POST['email']   ?? '', ENT_QUOTES, 'UTF-8'),
-            'topic'   => htmlspecialchars($_POST['topic']   ?? '', ENT_QUOTES, 'UTF-8'),
-            'message' => htmlspecialchars($_POST['message'] ?? '', ENT_QUOTES, 'UTF-8'),
-        ];
+        $contactError = contact_process($_POST);
+
+        if ($contactError === '') {
+            $contactSuccess = true;
+        } else {
+            // Keep values so the user doesn't have to retype everything
+            $contactSticky = [
+                'name'    => htmlspecialchars($_POST['name']    ?? '', ENT_QUOTES, 'UTF-8'),
+                'email'   => htmlspecialchars($_POST['email']   ?? '', ENT_QUOTES, 'UTF-8'),
+                'topic'   => htmlspecialchars($_POST['topic']   ?? '', ENT_QUOTES, 'UTF-8'),
+                'message' => htmlspecialchars($_POST['message'] ?? '', ENT_QUOTES, 'UTF-8'),
+            ];
+        }
     }
 }
 
@@ -98,6 +103,7 @@ include __DIR__ . '/../includes/navbar.php';
             <?php endif; ?>
 
             <form class="ah-contact-form" action="contact-us.php#contact-form" method="post" novalidate>
+              <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string) ($_SESSION['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
               <div class="row g-3">
                 <div class="col-12 col-md-6">
                   <label for="contact-name" class="form-label">Full name</label>

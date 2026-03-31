@@ -11,13 +11,37 @@ $err = '';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $postedCsrf = (string) ($_POST['csrf_token'] ?? '');
+        if (empty($_SESSION['csrf_token']) || !hash_equals((string) $_SESSION['csrf_token'], $postedCsrf)) {
+                $err = 'Invalid request token. Please refresh and try again.';
+        } else {
         $action = $_POST['action'] ?? '';
         if ($action === 'update_details') {
                 $fname = sanitize_input($_POST['fname'] ?? '');
                 $lname = sanitize_input($_POST['lname'] ?? '');
                 $email = sanitize_input($_POST['email'] ?? '');
-                update_profile_details($user_id, $fname, $lname, $email);
-                $msg = 'Profile updated successfully!';
+                $emailPassword = (string) ($_POST['email_current_password'] ?? '');
+
+                $currentUser = $auth->getCurrentUser();
+                $currentEmail = trim((string) ($currentUser['email'] ?? ''));
+                $emailChangeRequested = $email !== '' && strcasecmp($email, $currentEmail) !== 0;
+
+                if ($emailChangeRequested && trim($emailPassword) === '') {
+                        $err = 'Current password is required to change email.';
+                } else {
+                        update_profile_details($user_id, $fname, $lname);
+
+                        if ($emailChangeRequested) {
+                                $emailResult = change_profile_email($auth, (int) $user_id, $email, $emailPassword);
+                                if (!empty($emailResult['error'])) {
+                                        $err = (string) ($emailResult['message'] ?? 'Unable to update email.');
+                                } else {
+                                        $msg = 'Profile and email updated successfully!';
+                                }
+                        } else {
+                                $msg = 'Profile updated successfully!';
+                        }
+                }
         } elseif ($action === 'change_password') {
                 $current = $_POST['current_password'] ?? '';
                 $new = $_POST['new_password'] ?? '';
@@ -28,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                         $msg = 'Password changed successfully!';
                 }
+        }
         }
 }
 
@@ -101,6 +126,7 @@ include __DIR__ . '/../includes/navbar.php';
                                     <?php endif; ?>
                                     <form action="profile.php" method="POST" class="row g-3">
                                         <input type="hidden" name="action" value="update_details">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string) ($_SESSION['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
                                         <div class="col-md-6">
                                             <label for="fname" class="form-label">First Name</label>
                                             <input type="text" id="fname" name="fname" class="form-control" value="<?php echo htmlspecialchars($fname); ?>" required>
@@ -113,6 +139,10 @@ include __DIR__ . '/../includes/navbar.php';
                                             <label for="email" class="form-label">Email Address</label>
                                             <input type="email" id="email" name="email" class="form-control" value="<?php echo htmlspecialchars($email); ?>" required>
                                         </div>
+                                        <div class="col-12">
+                                            <label for="email_current_password" class="form-label">Current Password (required only if changing email)</label>
+                                            <input type="password" id="email_current_password" name="email_current_password" class="form-control" autocomplete="current-password">
+                                        </div>
                                         <div class="col-12 mt-2">
                                             <button type="submit" class="btn btn-primary px-4">Save Changes</button>
                                         </div>
@@ -121,6 +151,7 @@ include __DIR__ . '/../includes/navbar.php';
                                 <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
                                     <form action="profile.php" method="POST">
                                         <input type="hidden" name="action" value="change_password">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string) ($_SESSION['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
                                         <div class="row align-items-end g-3">
                                             <div class="col-12 col-md-4 mb-3 mb-md-0">
                                                 <label for="current_password" class="form-label">Current Password</label>

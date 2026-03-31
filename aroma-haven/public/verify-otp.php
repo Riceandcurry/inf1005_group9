@@ -6,12 +6,25 @@ require_once __DIR__ . '/../backend/init.php';
 require_once __DIR__ . '/../backend/otp.php';
 require_once __DIR__ . '/../backend/admin_helpers.php';
 
-if ($auth->isLogged() && empty($_SESSION['otp_pending_user_id'])) {
+if ($auth->isLogged() && empty($_SESSION['otp_pending_user_id']) && (isset($_SESSION['otp_verified']) && $_SESSION['otp_verified'] === true)) {
     header('Location: shop-coffee.php');
     exit;
 }
 
-if (empty($_SESSION['otp_pending_user_id'])) {
+if (!$auth->isLogged()) {
+    header('Location: login.php');
+    exit;
+}
+
+$pendingUserId = (int) ($_SESSION['otp_pending_user_id'] ?? 0);
+$currentUserId = (int) $auth->getCurrentUID();
+
+if ($pendingUserId <= 0 || $pendingUserId !== $currentUserId) {
+    unset($_SESSION['otp_pending_user_id'], $_SESSION['otp_pending_email'], $_SESSION['otp_verified']);
+    $_SESSION['error'] = 'Your verification session has expired. Please log in again.';
+    if (isset($_COOKIE['phpauth_session_cookie'])) {
+        $auth->logout($_COOKIE['phpauth_session_cookie']);
+    }
     header('Location: login.php');
     exit;
 }
@@ -19,58 +32,45 @@ if (empty($_SESSION['otp_pending_user_id'])) {
 $error   = '';
 $success = false;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resend'])) {
-    $userId = (int) $_SESSION['otp_pending_user_id'];
-    $email  = $_SESSION['otp_pending_email'] ?? '';
-    if ($email) {
-        otp_generate_and_send($userId, $email);
-        $success = true;
-    }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $code   = trim($_POST['otp_code'] ?? '');
-    $userId = (int) $_SESSION['otp_pending_user_id'];
-
-    if (empty($code)) {
-        $error = 'Please enter the verification code.';
-    } elseif (!preg_match('/^\d{6}$/', $code)) {
-        $error = 'Code must be 6 digits.';
-    } elseif (!otp_verify($userId, $code)) {
-        $error = 'Invalid or expired code. Please try again.';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $postedCsrf = (string) ($_POST['csrf_token'] ?? '');
+    if (empty($_SESSION['csrf_token']) || !hash_equals((string) $_SESSION['csrf_token'], $postedCsrf)) {
+        $error = 'Invalid request token. Please refresh and try again.';
+    } elseif (isset($_POST['resend'])) {
+        $userId = $pendingUserId;
+        $email  = $_SESSION['otp_pending_email'] ?? '';
+        if ($email) {
+            otp_generate_and_send($userId, $email);
+            $success = true;
+        }
     } else {
-        $email = $_SESSION['otp_pending_email'];
-        $conn = connect_db();
-        $userStmt = $conn->prepare("SELECT id FROM phpauth_users WHERE email = ? LIMIT 1");
-        $userStmt->execute([$email]);
-        $userRow = $userStmt->fetch(PDO::FETCH_ASSOC);
-        $uid = (int) ($userRow['id'] ?? 0);
+        $code   = trim($_POST['otp_code'] ?? '');
+        $userId = $pendingUserId;
 
-        if ($uid > 0) {
-            if (ah_is_user_suspended($uid)) {
-                unset($_SESSION['otp_pending_user_id'], $_SESSION['otp_pending_email']);
+        if (empty($code)) {
+            $error = 'Please enter the verification code.';
+        } elseif (!preg_match('/^\d{6}$/', $code)) {
+            $error = 'Code must be 6 digits.';
+        } elseif (!otp_verify($userId, $code)) {
+            $error = 'Invalid or expired code. Please try again.';
+        } else {
+            if (ah_is_user_suspended($currentUserId)) {
+                unset($_SESSION['otp_pending_user_id'], $_SESSION['otp_pending_email'], $_SESSION['otp_verified']);
+                if (isset($_COOKIE['phpauth_session_cookie'])) {
+                    $auth->logout($_COOKIE['phpauth_session_cookie']);
+                }
                 session_regenerate_id(true);
                 $_SESSION['error'] = 'Your account is suspended. Please contact support.';
                 header('Location: login.php');
                 exit;
             }
 
-            $sessionHash = substr(bin2hex(random_bytes(24)), 0, 40);
-            $expiry = date('Y-m-d H:i:s', strtotime('+1 hour'));
-            $sessionStmt = $conn->prepare(
-                "INSERT INTO phpauth_sessions (uid, hash, expiredate, ip, agent, cookie_crc) VALUES (?, ?, ?, ?, ?, ?)"
-            );
-            $agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-            $ip    = $_SERVER['REMOTE_ADDR'] ?? '';
-            $sessionStmt->execute([$uid, $sessionHash, $expiry, $ip, $agent, sha1($sessionHash . 'fghuior.)/!/jdUkd8s2!7HVHG7777ghg')]);
-            setcookie('phpauth_session_cookie', $sessionHash, strtotime('+1 hour'), '/', 'aromahaven.duckdns.org', true, true);
-            $_SESSION['phpauth_session_cookie'] = $sessionHash;
-            $_SESSION['phpauth_session_cookie_expire'] = strtotime('+1 hour');
+            $_SESSION['otp_verified'] = true;
+            unset($_SESSION['otp_pending_user_id'], $_SESSION['otp_pending_email']);
+            session_regenerate_id(true);
+            header('Location: shop-coffee.php');
+            exit;
         }
-
-        unset($_SESSION['otp_pending_user_id']);
-        unset($_SESSION['otp_pending_email']);
-        session_regenerate_id(true);
-        header('Location: shop-coffee.php');
-        exit;
     }
 }
 
@@ -111,6 +111,7 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <form action="verify-otp.php" method="post" class="ah-auth-form">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string) ($_SESSION['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
           <div>
             <label for="otp_code" class="ah-auth-label form-label mb-1">Verification Code</label>
             <input
@@ -130,6 +131,7 @@ include __DIR__ . '/../includes/header.php';
         </form>
 
         <form action="verify-otp.php" method="post" class="mt-3 text-center">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string) ($_SESSION['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
           <input type="hidden" name="resend" value="1">
           <button type="submit" class="btn btn-link ah-auth-link p-0">Resend code</button>
         </form>

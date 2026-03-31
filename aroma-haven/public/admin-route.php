@@ -15,6 +15,12 @@ function admin_redirect_with_flash(string $location, string $type, string $messa
     exit;
 }
 
+function admin_env_value(string $key, string $default = ''): string
+{
+    $value = ah_env($key, $default);
+    return trim((string) $value);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo 'Method Not Allowed';
@@ -217,16 +223,17 @@ try {
         $error = null;
 
         try {
-            $mailHost = (string) ah_env('MAIL_HOST', '');
-            $mailUser = (string) ah_env('MAIL_USER', '');
-            $mailPass = (string) ah_env('MAIL_PASS', '');
-            $mailPort = (int) ah_env('MAIL_PORT', '587');
-            $mailEncryption = strtolower((string) ah_env('MAIL_ENCRYPTION', 'tls'));
-            $mailAuthRaw = strtolower((string) ah_env('MAIL_SMTP_AUTH', 'true'));
+            $mailHost = admin_env_value('MAIL_HOST');
+            $mailUser = admin_env_value('MAIL_USER');
+            $mailPass = admin_env_value('MAIL_PASS');
+            $mailPort = (int) admin_env_value('MAIL_PORT', '587');
+            $mailEncryption = strtolower(admin_env_value('MAIL_ENCRYPTION', 'tls'));
+            $mailAuthRaw = strtolower(admin_env_value('MAIL_SMTP_AUTH', 'true'));
             $mailAuth = !in_array($mailAuthRaw, ['0', 'false', 'no', 'off'], true);
 
             if ($mailHost === '') {
-                throw new Exception('MAIL_HOST is empty.');
+                $envSource = ah_env_source_path();
+                throw new Exception('MAIL_HOST is empty. env_source=' . ($envSource !== '' ? $envSource : 'not_found_or_unreadable'));
             }
             if ($mailAuth && $mailUser === '') {
                 throw new Exception('MAIL_USER is empty while SMTP auth is enabled.');
@@ -249,8 +256,8 @@ try {
                 $mail->SMTPAutoTLS = false;
             }
 
-            $fromAddress = (string) ah_env('MAIL_FROM_ADDRESS', $mailUser !== '' ? $mailUser : 'no-reply@localhost');
-            $fromName = (string) ah_env('MAIL_FROM_NAME', 'Aroma Haven');
+            $fromAddress = admin_env_value('MAIL_FROM_ADDRESS', $mailUser !== '' ? $mailUser : 'no-reply@localhost');
+            $fromName = admin_env_value('MAIL_FROM_NAME', 'Aroma Haven');
             $mail->setFrom($fromAddress, $fromName);
             $mail->addAddress((string) $submission['email'], (string) ($submission['name'] ?? ''));
             $mail->isHTML(true);
