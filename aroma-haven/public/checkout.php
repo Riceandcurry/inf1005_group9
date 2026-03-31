@@ -122,7 +122,7 @@ include __DIR__ . '/../includes/navbar.php';
 
         <div class="ah-payment-options">
           <label class="ah-payment-option">
-            <input type="radio" name="payment" value="credit_card" checked>
+            <input type="radio" name="payment" value="credit_card" disabled>
             <div class="ah-payment-option-box">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none"
                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
@@ -130,11 +130,11 @@ include __DIR__ . '/../includes/navbar.php';
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
                 <line x1="1" y1="10" x2="23" y2="10"/>
               </svg>
-              <span>Credit Card</span>
+              <span>Credit Card (Coming Soon)</span>
             </div>
           </label>
           <label class="ah-payment-option">
-            <input type="radio" name="payment" value="paypal">
+            <input type="radio" name="payment" value="paypal" checked>
             <div class="ah-payment-option-box">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
                    fill="currentColor" aria-hidden="true">
@@ -217,6 +217,7 @@ include __DIR__ . '/../includes/navbar.php';
           <a href="shop-coffee.php" class="ah-checkout-back-btn">BACK TO SHOP</a>
           <button type="submit" class="ah-checkout-place-btn">PLACE ORDER</button>
         </div>
+        <p id="ahCheckoutMessage" class="small mt-2 mb-0 text-muted" role="status" aria-live="polite"></p>
 
       </form>
     </div>
@@ -236,8 +237,10 @@ include __DIR__ . '/../includes/navbar.php';
   var SHIPPING = 5.99;
   var TAX_RATE = 0.08;
   var PAYPAL_CURRENCY = <?php echo json_encode($paypalCurrency); ?>;
+  var CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>;
   var paypalRendered = false;
   var orderState = { subtotal: 0, tax: 0, total: 0 };
+  var serverOrder = null;
 
   function loadCart() {
     try { return Object.values(JSON.parse(localStorage.getItem(CART_KEY)) || {}); }
@@ -278,12 +281,146 @@ include __DIR__ . '/../includes/navbar.php';
     document.getElementById('ahTotal').textContent    = fmt(total);
   }
 
-  function finalizeOrder() {
-    var cartRaw = localStorage.getItem(CART_KEY);
-    sessionStorage.setItem('ah_confirm_order', cartRaw || '{}');
-    sessionStorage.setItem('ah_confirm_num', Date.now().toString(36).toUpperCase().slice(-6));
-    localStorage.removeItem(CART_KEY);
-    window.location.href = 'confirmation.php';
+  function paypalRequest(body) {
+    var headers = { 'Content-Type': 'application/json' };
+    if (CSRF_TOKEN) {
+      headers['X-CSRF-Token'] = CSRF_TOKEN;
+    }
+
+    return fetch('paypal_api.php', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok) {
+          var msg = (data && data.error) ? data.error : 'Checkout request failed.';
+          throw new Error(msg);
+        }
+        return data;
+      });
+    });
+  }
+
+  function checkoutRequest(body) {
+    var headers = { 'Content-Type': 'application/json' };
+    if (CSRF_TOKEN) {
+      headers['X-CSRF-Token'] = CSRF_TOKEN;
+    }
+
+    return fetch('checkout_api.php', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok) {
+          var msg = (data && data.error) ? data.error : 'Unable to create checkout order.';
+          throw new Error(msg);
+        }
+        return data;
+      });
+    });
+  }
+
+  function getOrCreateCheckoutIdempotencyKey() {
+    var key = '';
+    try {
+      key = sessionStorage.getItem('ah_checkout_idem') || '';
+    } catch (e) {}
+
+    if (/^[A-Za-z0-9_-]{8,80}$/.test(key)) {
+      return key;
+    }
+
+    key = 'chk_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12);
+    try {
+      sessionStorage.setItem('ah_checkout_idem', key);
+    } catch (e) {}
+    return key;
+  }
+
+  function getShippingPayload() {
+    var form = document.getElementById('ahCheckoutForm');
+    if (!form) {
+      return {};
+    }
+
+    return {
+      full_name: (form.full_name && form.full_name.value || '').trim(),
+      email: (form.email && form.email.value || '').trim(),
+      phone: (form.phone && form.phone.value || '').trim(),
+      street: (form.street && form.street.value || '').trim(),
+      city: (form.city && form.city.value || '').trim(),
+      state: (form.state && form.state.value || '').trim(),
+      zip: (form.zip && form.zip.value || '').trim()
+    };
+  }
+
+  function extractOrderLines() {
+    var items = loadCart();
+    return items.map(function (item) {
+      return {
+        product_id: parseInt(item.id, 10),
+        quantity: Math.max(1, Math.min(99, parseInt(item.qty, 10) || 1))
+      };
+    }).filter(function (line) {
+      return Number.isFinite(line.product_id) && line.product_id > 0 && line.quantity > 0;
+    });
+  }
+
+  function applyServerTotals(data) {
+    var subtotal = parseFloat(data.subtotal || 0);
+    var shipping = parseFloat(data.shipping || 0);
+    var tax = parseFloat(data.tax || 0);
+    var total = parseFloat(data.total || 0);
+
+    if (!Number.isFinite(subtotal) || !Number.isFinite(shipping) || !Number.isFinite(tax) || !Number.isFinite(total)) {
+      return;
+    }
+
+    orderState.subtotal = subtotal;
+    orderState.tax = tax;
+    orderState.total = total;
+
+    document.getElementById('ahSubtotal').textContent = fmt(subtotal);
+    document.getElementById('ahShipping').textContent = fmt(shipping);
+    document.getElementById('ahTax').textContent = fmt(tax);
+    document.getElementById('ahTotal').textContent = fmt(total);
+  }
+
+  function ensureServerOrder(hasRetried) {
+    if (serverOrder && serverOrder.order_id) {
+      return Promise.resolve(serverOrder);
+    }
+
+    var lines = extractOrderLines();
+    if (!lines.length) {
+      return Promise.reject(new Error('Your cart is empty.'));
+    }
+
+    return checkoutRequest({
+      action: 'create_pending_order',
+      lines: lines,
+      idempotency_key: getOrCreateCheckoutIdempotencyKey(),
+      shipping: getShippingPayload()
+    }).then(function (data) {
+      if (!data.order_id) {
+        throw new Error('Server did not return an order id.');
+      }
+      serverOrder = data;
+      applyServerTotals(data);
+      return serverOrder;
+    }).catch(function (err) {
+      var message = (err && err.message) ? err.message : '';
+      var staleIdempotency = /idempotency|finalized/i.test(message);
+      if (!hasRetried && staleIdempotency) {
+        try { sessionStorage.removeItem('ah_checkout_idem'); } catch (e) {}
+        serverOrder = null;
+        return ensureServerOrder(true);
+      }
+      throw err;
+    });
   }
 
   function initPaypalButtons() {
@@ -305,39 +442,52 @@ include __DIR__ . '/../includes/navbar.php';
           return Promise.reject(new Error('Please fill in required shipping details first.'));
         }
 
-        return fetch('paypal_api.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        return ensureServerOrder().then(function (pendingOrder) {
+          return paypalRequest({
             action: 'create',
-            total: orderState.total.toFixed(2),
-            currency: PAYPAL_CURRENCY
-          })
+            checkout_order_id: pendingOrder.order_id
+          });
         })
-          .then(function (res) { return res.json(); })
           .then(function (data) {
             if (!data.id) throw new Error('Unable to create PayPal order.');
             return data.id;
           });
       },
       onApprove: function (data) {
-        return fetch('paypal_api.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'capture', orderID: data.orderID })
-        })
-          .then(function (res) { return res.json(); })
+        return paypalRequest({ action: 'capture', orderID: data.orderID })
           .then(function (capture) {
             if (capture.status !== 'COMPLETED') {
               throw new Error('Payment not completed.');
             }
-            finalizeOrder();
+            if (!capture.confirmation_url) {
+              throw new Error('Missing confirmation redirect.');
+            }
+            localStorage.removeItem(CART_KEY);
+            try { sessionStorage.removeItem('ah_checkout_idem'); } catch (e) {}
+            window.location.href = capture.confirmation_url;
           });
       },
-      onError: function () {
-        alert('PayPal payment failed. Please try again.');
+      onError: function (err) {
+        var detail = (err && err.message) ? ('\n' + err.message) : '';
+        alert('PayPal payment failed. Please try again.' + detail);
       }
     }).render('#paypal-button-container');
+  }
+
+  function setCheckoutMessage(message, tone) {
+    var msgEl = document.getElementById('ahCheckoutMessage');
+    if (!msgEl) return;
+    msgEl.textContent = message || '';
+    msgEl.classList.remove('text-muted', 'text-danger', 'text-success');
+    if (tone === 'error') {
+      msgEl.classList.add('text-danger');
+      return;
+    }
+    if (tone === 'success') {
+      msgEl.classList.add('text-success');
+      return;
+    }
+    msgEl.classList.add('text-muted');
   }
 
   /* Payment toggle */
@@ -355,24 +505,41 @@ include __DIR__ . '/../includes/navbar.php';
   /* Form submit */
   document.getElementById('ahCheckoutForm').addEventListener('submit', function (e) {
     e.preventDefault();
+    setCheckoutMessage('', 'info');
+
     if (!this.checkValidity()) {
       this.classList.add('was-validated');
+      setCheckoutMessage('Please complete all required shipping fields first.', 'error');
       return;
     }
 
     var selectedPayment = document.querySelector('input[name="payment"]:checked');
     if (selectedPayment && selectedPayment.value === 'paypal') {
-      alert('Click the PayPal button to complete payment.');
+      ensureServerOrder()
+        .then(function () {
+          setCheckoutMessage('Order prepared. Click the PayPal button below to complete payment.', 'success');
+          var paypalWrap = document.getElementById('ahPaypalButtonsWrap');
+          if (paypalWrap) {
+            paypalWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        })
+        .catch(function (err) {
+          var msg = (err && err.message) ? err.message : 'Unable to prepare your order.';
+          setCheckoutMessage(msg, 'error');
+        });
       return;
     }
 
-    finalizeOrder();
+    setCheckoutMessage('Credit card checkout is temporarily unavailable. Please use PayPal.', 'error');
   });
 
   renderSummary();
 
   var selectedOnLoad = document.querySelector('input[name="payment"]:checked');
   if (selectedOnLoad && selectedOnLoad.value === 'paypal') {
+    document.getElementById('ahCreditCardFields').hidden = true;
+    document.getElementById('ahPaypalNotice').hidden = false;
+    document.getElementById('ahPaypalEmailWrap').hidden = false;
     document.getElementById('ahPaypalButtonsWrap').hidden = false;
     initPaypalButtons();
   }

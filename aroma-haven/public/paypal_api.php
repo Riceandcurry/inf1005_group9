@@ -1,11 +1,21 @@
 <?php
+require_once __DIR__ . '/../backend/auth_guard.php';
 require_once __DIR__ . '/../backend/env.php';
+require_once __DIR__ . '/../backend/order_service.php';
+require_login();
 
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);
+    exit;
+}
+
+$csrfHeader = (string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+if (empty($_SESSION['csrf_token']) || !hash_equals((string) $_SESSION['csrf_token'], $csrfHeader)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Invalid CSRF token']);
     exit;
 }
 
@@ -85,14 +95,41 @@ if ($accessToken === null) {
 }
 
 if ($action === 'create') {
-    $total = isset($payload['total']) ? (float)$payload['total'] : 0;
-    if ($total <= 0) {
+    $checkoutOrderId = (int) ($payload['checkout_order_id'] ?? 0);
+    if ($checkoutOrderId <= 0) {
         http_response_code(400);
-        echo json_encode(['error' => 'Invalid order total']);
+        echo json_encode(['error' => 'Missing checkout_order_id']);
         exit;
     }
 
-    $currency = strtoupper((string)($payload['currency'] ?? $defaultCurrency));
+    $currentUserId = (int) $auth->getCurrentUID();
+    $order = ah_checkout_get_order_for_user($checkoutOrderId, $currentUserId);
+    if (!$order) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Order not found']);
+        exit;
+    }
+
+    if ((string) ($order['status'] ?? '') !== 'pending') {
+        http_response_code(409);
+        echo json_encode(['error' => 'Order is not in pending state']);
+        exit;
+    }
+
+    $existingProviderOrderId = trim((string) ($order['payment_provider_order_id'] ?? ''));
+    if ($existingProviderOrderId !== '') {
+        echo json_encode(['id' => $existingProviderOrderId]);
+        exit;
+    }
+
+    $total = (float) ($order['total'] ?? 0);
+    if ($total <= 0) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Order total is invalid']);
+        exit;
+    }
+
+    $currency = strtoupper((string) ($order['currency'] ?? $defaultCurrency));
 
     $orderBody = json_encode([
         'intent' => 'CAPTURE',
@@ -109,6 +146,7 @@ if ($action === 'create') {
         [
             'Authorization: Bearer ' . $accessToken,
             'Content-Type: application/json',
+            'PayPal-Request-Id: checkout-create-' . $checkoutOrderId,
         ],
         'POST',
         $orderBody
@@ -120,7 +158,27 @@ if ($action === 'create') {
         exit;
     }
 
-    echo json_encode(['id' => $result['data']['id'] ?? null]);
+    $paypalOrderId = (string) ($result['data']['id'] ?? '');
+    if ($paypalOrderId === '') {
+        http_response_code(500);
+        echo json_encode(['error' => 'PayPal order id missing in response']);
+        exit;
+    }
+
+    if (!ah_checkout_attach_provider_order_id($checkoutOrderId, $currentUserId, $paypalOrderId)) {
+        $freshOrder = ah_checkout_get_order_for_user($checkoutOrderId, $currentUserId);
+        $resolvedProviderOrderId = trim((string) (($freshOrder['payment_provider_order_id'] ?? '')));
+        if ($resolvedProviderOrderId !== '') {
+            echo json_encode(['id' => $resolvedProviderOrderId]);
+            exit;
+        }
+
+        http_response_code(500);
+        echo json_encode(['error' => 'Unable to attach provider order id']);
+        exit;
+    }
+
+    echo json_encode(['id' => $paypalOrderId]);
     exit;
 }
 
@@ -132,15 +190,72 @@ if ($action === 'capture') {
         exit;
     }
 
+    $currentUserId = (int) $auth->getCurrentUID();
+    $localOrder = ah_checkout_get_order_by_provider_id($orderId, $currentUserId);
+    if (!$localOrder) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Local checkout order not found for this PayPal order']);
+        exit;
+    }
+
+    $localOrderId = (int) ($localOrder['id'] ?? 0);
+    $localTotal = number_format((float) ($localOrder['total'] ?? 0), 2, '.', '');
+    $localCurrency = strtoupper((string) ($localOrder['currency'] ?? $defaultCurrency));
+    $localStatus = (string) ($localOrder['status'] ?? '');
+
+    if ($localStatus === 'paid') {
+        $_SESSION['ah_checkout_confirmation'] = [
+            'source' => 'paypal',
+            'order_id' => $localOrderId,
+            'paypal_order_id' => $orderId,
+            'paypal_capture_id' => '',
+            'amount' => $localTotal,
+            'currency' => $localCurrency,
+            'created_at' => time(),
+            'user_id' => $currentUserId,
+        ];
+
+        echo json_encode([
+            'status' => 'COMPLETED',
+            'confirmation_url' => 'confirmation.php',
+        ]);
+        exit;
+    }
+
+    if ($localStatus !== 'pending') {
+        http_response_code(409);
+        echo json_encode(['error' => 'Order is not pending and cannot be captured']);
+        exit;
+    }
+
     $result = paypal_request(
         rtrim($baseUrl, '/') . '/v2/checkout/orders/' . rawurlencode($orderId) . '/capture',
         [
             'Authorization: Bearer ' . $accessToken,
             'Content-Type: application/json',
+            'PayPal-Request-Id: checkout-capture-' . $orderId,
         ],
         'POST',
         '{}'
     );
+
+    if (!$result['ok']) {
+        if ((int) $result['status'] === 422) {
+            $lookup = paypal_request(
+                rtrim($baseUrl, '/') . '/v2/checkout/orders/' . rawurlencode($orderId),
+                [
+                    'Authorization: Bearer ' . $accessToken,
+                    'Content-Type: application/json',
+                ],
+                'GET',
+                null
+            );
+
+            if ($lookup['ok']) {
+                $result = $lookup;
+            }
+        }
+    }
 
     if (!$result['ok']) {
         http_response_code($result['status']);
@@ -148,7 +263,83 @@ if ($action === 'capture') {
         exit;
     }
 
-    echo json_encode(['status' => $result['data']['status'] ?? 'UNKNOWN', 'data' => $result['data']]);
+    $status = (string) ($result['data']['status'] ?? 'UNKNOWN');
+    if ($status !== 'COMPLETED') {
+        ah_checkout_mark_order_failed($localOrderId, $currentUserId);
+        ah_checkout_add_payment_log(
+            $localOrderId,
+            'paypal',
+            $orderId,
+            null,
+            $status,
+            $localCurrency,
+            (float) ($localOrder['total'] ?? 0),
+            $result['data']
+        );
+        echo json_encode(['status' => $status, 'data' => $result['data']]);
+        exit;
+    }
+
+    $purchaseUnit = $result['data']['purchase_units'][0] ?? [];
+    $captures = $purchaseUnit['payments']['captures'] ?? [];
+    $captureData = (is_array($captures) && isset($captures[0]) && is_array($captures[0])) ? $captures[0] : [];
+
+    $amountData = [];
+    if (isset($captureData['amount']) && is_array($captureData['amount'])) {
+        $amountData = $captureData['amount'];
+    } elseif (isset($purchaseUnit['amount']) && is_array($purchaseUnit['amount'])) {
+        $amountData = $purchaseUnit['amount'];
+    }
+
+    $amountValue = (string) ($amountData['value'] ?? '');
+    $currencyCode = strtoupper((string) ($amountData['currency_code'] ?? $defaultCurrency));
+
+    if ($amountValue === '' || number_format((float) $amountValue, 2, '.', '') !== $localTotal || $currencyCode !== $localCurrency) {
+        ah_checkout_mark_order_failed($localOrderId, $currentUserId);
+        ah_checkout_add_payment_log(
+            $localOrderId,
+            'paypal',
+            $orderId,
+            (string) ($captureData['id'] ?? ''),
+            'amount_mismatch',
+            $currencyCode !== '' ? $currencyCode : $localCurrency,
+            (float) ($amountValue !== '' ? $amountValue : 0),
+            $result['data']
+        );
+
+        http_response_code(409);
+        echo json_encode(['error' => 'Captured amount does not match local order total']);
+        exit;
+    }
+
+    ah_checkout_mark_order_paid($localOrderId, $currentUserId);
+    ah_checkout_add_payment_log(
+        $localOrderId,
+        'paypal',
+        $orderId,
+        (string) ($captureData['id'] ?? ''),
+        $status,
+        $currencyCode,
+        (float) $amountValue,
+        $result['data']
+    );
+
+    $_SESSION['ah_checkout_confirmation'] = [
+        'source' => 'paypal',
+        'order_id' => $localOrderId,
+        'paypal_order_id' => $orderId,
+        'paypal_capture_id' => (string) ($captureData['id'] ?? ''),
+        'amount' => $amountValue,
+        'currency' => $currencyCode,
+        'created_at' => time(),
+        'user_id' => (int) $auth->getCurrentUID(),
+    ];
+
+    echo json_encode([
+        'status' => $status,
+        'data' => $result['data'],
+        'confirmation_url' => 'confirmation.php',
+    ]);
     exit;
 }
 

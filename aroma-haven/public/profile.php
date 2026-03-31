@@ -11,6 +11,10 @@ $err = '';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $postedCsrf = (string) ($_POST['csrf_token'] ?? '');
+        if (empty($_SESSION['csrf_token']) || !hash_equals((string) $_SESSION['csrf_token'], $postedCsrf)) {
+                $err = 'Invalid request token. Please refresh and try again.';
+        } else {
         $action = $_POST['action'] ?? '';
         if ($action === 'update_details') {
                 $fname = sanitize_input($_POST['fname'] ?? '');
@@ -28,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                         $msg = 'Password changed successfully!';
                 }
+        }
         }
 }
 
@@ -101,6 +106,7 @@ include __DIR__ . '/../includes/navbar.php';
                                     <?php endif; ?>
                                     <form action="profile.php" method="POST" class="row g-3">
                                         <input type="hidden" name="action" value="update_details">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string) ($_SESSION['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
                                         <div class="col-md-6">
                                             <label for="fname" class="form-label">First Name</label>
                                             <input type="text" id="fname" name="fname" class="form-control" value="<?php echo htmlspecialchars($fname); ?>" required>
@@ -121,6 +127,7 @@ include __DIR__ . '/../includes/navbar.php';
                                 <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
                                     <form action="profile.php" method="POST">
                                         <input type="hidden" name="action" value="change_password">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string) ($_SESSION['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
                                         <div class="row align-items-end g-3">
                                             <div class="col-12 col-md-4 mb-3 mb-md-0">
                                                 <label for="current_password" class="form-label">Current Password</label>
