@@ -60,43 +60,50 @@ include __DIR__ . '/../includes/navbar.php';
       <form id="ahCheckoutForm" novalidate>
 
         <div class="ah-checkout-field">
-          <label for="chkFullName">Full Name</label>
-          <input type="text" id="chkFullName" name="full_name" autocomplete="name" required>
+          <label for="chkFullName">Full Name <span aria-hidden="true" style="color:red">*</span></label>
+          <input type="text" id="chkFullName" name="full_name" autocomplete="name" required maxlength="60" aria-required="true">
+          <div class="invalid-feedback">Please enter your full name.</div>
         </div>
 
         <div class="ah-checkout-field">
-          <label for="chkEmail">Email Address</label>
-          <input type="email" id="chkEmail" name="email" autocomplete="email" required>
+          <label for="chkEmail">Email Address <span aria-hidden="true" style="color:red">*</span></label>
+          <input type="email" id="chkEmail" name="email" autocomplete="email" required maxlength="80" aria-required="true">
+          <div class="invalid-feedback">Please enter a valid email address.</div>
         </div>
 
         <div class="ah-checkout-field">
-          <label for="chkStreet">Street Address</label>
-          <input type="text" id="chkStreet" name="street" autocomplete="street-address" required>
+          <label for="chkStreet">Street Address <span aria-hidden="true" style="color:red">*</span></label>
+          <input type="text" id="chkStreet" name="street" autocomplete="street-address" required maxlength="100" aria-required="true">
+          <div class="invalid-feedback">Please enter your street address.</div>
         </div>
 
         <div class="row g-4">
           <div class="col-12 col-sm-6">
             <div class="ah-checkout-field">
-              <label for="chkCity">City</label>
-              <input type="text" id="chkCity" name="city" autocomplete="address-level2" required>
+              <label for="chkCity">City <span aria-hidden="true" style="color:red">*</span></label>
+              <input type="text" id="chkCity" name="city" autocomplete="address-level2" required maxlength="40" aria-required="true">
+              <div class="invalid-feedback">Please enter your city.</div>
             </div>
           </div>
           <div class="col-12 col-sm-6">
             <div class="ah-checkout-field">
-              <label for="chkState">State</label>
-              <input type="text" id="chkState" name="state" autocomplete="address-level1" required>
+              <label for="chkState">State <span aria-hidden="true" style="color:red">*</span></label>
+              <input type="text" id="chkState" name="state" autocomplete="address-level1" required maxlength="40" aria-required="true">
+              <div class="invalid-feedback">Please enter your state.</div>
             </div>
           </div>
           <div class="col-12 col-sm-6">
             <div class="ah-checkout-field">
-              <label for="chkZip">ZIP Code</label>
-              <input type="text" id="chkZip" name="zip" autocomplete="postal-code" required>
+              <label for="chkZip">ZIP Code <span aria-hidden="true" style="color:red">*</span></label>
+              <input type="text" id="chkZip" name="zip" autocomplete="postal-code" required maxlength="12" pattern="[A-Za-z0-9\- ]{3,12}" aria-required="true">
+              <div class="invalid-feedback">Please enter a valid ZIP or postal code.</div>
             </div>
           </div>
           <div class="col-12 col-sm-6">
             <div class="ah-checkout-field">
-              <label for="chkPhone">Phone Number</label>
-              <input type="tel" id="chkPhone" name="phone" autocomplete="tel">
+              <label for="chkPhone">Phone Number <span aria-hidden="true" style="color:red">*</span></label>
+              <input type="tel" id="chkPhone" name="phone" autocomplete="tel" required maxlength="20" pattern="^\+?[0-9\- ()]{8,20}$" aria-required="true" inputmode="tel">
+              <div class="invalid-feedback">Please enter a valid phone number (numbers only, may include +, -, space, or parentheses).</div>
             </div>
           </div>
         </div>
@@ -215,6 +222,7 @@ include __DIR__ . '/../includes/navbar.php';
 <script src="https://www.paypal.com/sdk/js?client-id=<?php echo rawurlencode($paypalClientId); ?>&currency=<?php echo rawurlencode($paypalCurrency); ?>&intent=capture"></script>
 <?php endif; ?>
 
+<script src="js/main.js"></script>
 <script>
 (function () {
   var CART_KEY = 'ah_cart';

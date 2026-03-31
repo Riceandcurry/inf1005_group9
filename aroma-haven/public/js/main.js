@@ -1,3 +1,61 @@
+(function checkoutValidationAndFormatting() {
+  // Only run on checkout page
+  if (!document.getElementById('ahCheckoutForm')) return;
+  var form = document.getElementById('ahCheckoutForm');
+  var phone = document.getElementById('chkPhone');
+  var zip = document.getElementById('chkZip');
+  var email = document.getElementById('chkEmail');
+
+  // Auto-format phone number as user types
+  phone.addEventListener('input', function () {
+    // Remove all non-numeric except +, -, (, ), and space
+    var val = phone.value.replace(/[^0-9+\-() ]/g, '');
+    phone.value = val;
+  });
+
+  // Auto-uppercase ZIP (for international)
+  zip.addEventListener('input', function () {
+    zip.value = zip.value.toUpperCase();
+  });
+
+  // Custom validation for phone and zip
+  form.addEventListener('submit', function (e) {
+    var valid = true;
+    // Phone: must match pattern and not be all spaces
+    if (!phone.value.match(/^\+?[0-9\- ()]{8,20}$/) || !phone.value.replace(/[^0-9]/g, '')) {
+      phone.setCustomValidity('Please enter a valid phone number.');
+      valid = false;
+    } else {
+      phone.setCustomValidity('');
+    }
+    // ZIP: must match pattern
+    if (!zip.value.match(/[A-Za-z0-9\- ]{3,12}/)) {
+      zip.setCustomValidity('Please enter a valid ZIP or postal code.');
+      valid = false;
+    } else {
+      zip.setCustomValidity('');
+    }
+    // Email: browser handles, but add custom message
+    if (!email.checkValidity()) {
+      email.setCustomValidity('Please enter a valid email address.');
+      valid = false;
+    } else {
+      email.setCustomValidity('');
+    }
+    if (!valid) {
+      form.classList.add('was-validated');
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  // Accessibility: focus first invalid field on submit
+  form.addEventListener('invalid', function (e) {
+    e.preventDefault();
+    var first = form.querySelector(':invalid');
+    if (first) first.focus();
+  }, true);
+})();
 (function () {
   var drawer       = document.getElementById('ahCartDrawer');
   var overlay      = document.getElementById('ahCartOverlay');
