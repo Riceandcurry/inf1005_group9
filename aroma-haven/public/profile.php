@@ -20,8 +20,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fname = sanitize_input($_POST['fname'] ?? '');
                 $lname = sanitize_input($_POST['lname'] ?? '');
                 $email = sanitize_input($_POST['email'] ?? '');
-                update_profile_details($user_id, $fname, $lname, $email);
-                $msg = 'Profile updated successfully!';
+                $emailPassword = (string) ($_POST['email_current_password'] ?? '');
+
+                $currentUser = $auth->getCurrentUser();
+                $currentEmail = trim((string) ($currentUser['email'] ?? ''));
+                $emailChangeRequested = $email !== '' && strcasecmp($email, $currentEmail) !== 0;
+
+                if ($emailChangeRequested && trim($emailPassword) === '') {
+                        $err = 'Current password is required to change email.';
+                } else {
+                        update_profile_details($user_id, $fname, $lname);
+
+                        if ($emailChangeRequested) {
+                                $emailResult = change_profile_email($auth, (int) $user_id, $email, $emailPassword);
+                                if (!empty($emailResult['error'])) {
+                                        $err = (string) ($emailResult['message'] ?? 'Unable to update email.');
+                                } else {
+                                        $msg = 'Profile and email updated successfully!';
+                                }
+                        } else {
+                                $msg = 'Profile updated successfully!';
+                        }
+                }
         } elseif ($action === 'change_password') {
                 $current = $_POST['current_password'] ?? '';
                 $new = $_POST['new_password'] ?? '';
@@ -118,6 +138,10 @@ include __DIR__ . '/../includes/navbar.php';
                                         <div class="col-12">
                                             <label for="email" class="form-label">Email Address</label>
                                             <input type="email" id="email" name="email" class="form-control" value="<?php echo htmlspecialchars($email); ?>" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="email_current_password" class="form-label">Current Password (required only if changing email)</label>
+                                            <input type="password" id="email_current_password" name="email_current_password" class="form-control" autocomplete="current-password">
                                         </div>
                                         <div class="col-12 mt-2">
                                             <button type="submit" class="btn btn-primary px-4">Save Changes</button>

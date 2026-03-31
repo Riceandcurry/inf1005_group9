@@ -1,30 +1,6 @@
 <?php
 require_once __DIR__ . '/util.php';
 
-function contact_ensure_table(PDO $conn): void
-{
-    $conn->exec("
-        CREATE TABLE IF NOT EXISTS `contact_submissions` (
-            `id` INT NOT NULL AUTO_INCREMENT,
-            `name` VARCHAR(100) NOT NULL,
-            `email` VARCHAR(100) NOT NULL,
-            `topic` VARCHAR(50) NOT NULL,
-            `message` TEXT NOT NULL,
-            `status` ENUM('new', 'in_progress', 'resolved') NOT NULL DEFAULT 'new',
-            `internal_note` TEXT DEFAULT NULL,
-            `replied_at` DATETIME DEFAULT NULL,
-            `replied_by` INT DEFAULT NULL,
-            `submitted_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`),
-            KEY `idx_contact_submissions_status` (`status`),
-            KEY `idx_contact_submissions_replied_by` (`replied_by`),
-            CONSTRAINT `fk_contact_submissions_replied_by`
-              FOREIGN KEY (`replied_by`) REFERENCES `phpauth_users` (`id`)
-              ON DELETE SET NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-    ");
-}
-
 function contact_process(array $data): string
 {
     $allowedTopics = ['beans', 'brew', 'order', 'other'];
@@ -71,7 +47,6 @@ function contact_process(array $data): string
 
     try {
         $conn = connect_db();
-        contact_ensure_table($conn);
 
         $stmt = $conn->prepare(
             'INSERT INTO contact_submissions (name, email, topic, message) VALUES (?, ?, ?, ?)'
@@ -81,6 +56,10 @@ function contact_process(array $data): string
         return '';
 
     } catch (PDOException $e) {
+        ah_log_error('contact_submission_insert_failed', $e, [
+            'email' => $email,
+            'topic' => $topic,
+        ]);
         return 'Your message could not be saved. Please try again later.';
     }
 }
