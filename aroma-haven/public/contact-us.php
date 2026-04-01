@@ -54,9 +54,9 @@ include __DIR__ . '/../includes/navbar.php';
   <section class="container ah-contact-content" aria-labelledby="contact-info-heading">
     <div class="row g-4 g-xl-5 align-items-start">
       <div class="col-12 col-lg-5">
-        <article class="ah-contact-panel" id="contact-info-heading">
+        <article class="ah-contact-panel">
           <p class="ah-contact-kicker mb-2">Reach Us</p>
-          <h2 class="ah-contact-title mb-3">Talk to the Aroma Haven team.</h2>
+          <h2 id="contact-info-heading" class="ah-contact-title mb-3">Talk to the Aroma Haven team.</h2>
           <p class="ah-contact-copy mb-4">We reply Monday to Saturday and usually respond within one business day.</p>
           <ul class="ah-contact-list list-unstyled mb-0" aria-label="Contact channels">
             <li>

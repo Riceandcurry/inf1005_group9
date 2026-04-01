@@ -5,8 +5,8 @@
      ===================================================================== -->
 <div class="ah-cart-overlay" id="ahCartOverlay"></div>
 
-<aside class="ah-cart-drawer" id="ahCartDrawer"
-       role="dialog" aria-modal="true" aria-labelledby="ahCartTitle" aria-hidden="true" tabindex="-1">
+<div class="ah-cart-drawer" id="ahCartDrawer"
+     role="dialog" aria-modal="true" aria-labelledby="ahCartTitle" aria-hidden="true" tabindex="-1">
 
   <div class="ah-cart-header">
     <h2 class="ah-cart-title mb-0" id="ahCartTitle">Shopping cart</h2>
@@ -15,7 +15,7 @@
   <div class="ah-cart-divider"></div>
 
   <div class="ah-cart-scroll">
-    <section class="ah-cart-primary">
+    <section class="ah-cart-primary" aria-label="Cart items">
       <div class="ah-cart-body" id="ahCartEmpty">
         <div class="ah-cart-empty text-center">
           <div class="ah-cart-empty-icon mx-auto mb-3">
@@ -46,5 +46,4 @@
     </div>
   </div>
 
-</aside>
-
+</div>
