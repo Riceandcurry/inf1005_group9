@@ -175,7 +175,8 @@
       var tags  = (item.tags || []).map(function (t) {
         return '<span class="ah-cart-item-tag">' + esc(t) + '</span>';
       }).join('');
-      return '<div class="ah-cart-item" data-id="' + esc(item.id) + '">' +
+      var itemKey = item.key || item.id;
+      return '<div class="ah-cart-item" data-id="' + esc(itemKey) + '">' +
         '<img class="ah-cart-item-img" src="' + esc(item.image) + '" alt="' + esc(item.name) + '" loading="lazy">' +
         '<div class="ah-cart-item-details">' +
           '<div class="ah-cart-item-top">' +
@@ -186,10 +187,11 @@
             '<span class="ah-cart-item-price">' + price + '</span>' +
           '</div>' +
           '<div class="ah-cart-item-tags">' + tags + '</div>' +
+          (item.grind ? '<p class="ah-cart-item-grind mb-0">' + esc(item.grind) + '</p>' : '') +
           '<div class="ah-cart-qty">' +
-            '<button class="ah-cart-qty-btn" data-qty-dec data-id="' + esc(item.id) + '" aria-label="Decrease quantity">&#8722;</button>' +
+            '<button class="ah-cart-qty-btn" data-qty-dec data-id="' + esc(itemKey) + '" aria-label="Decrease quantity">&#8722;</button>' +
             '<span class="ah-cart-qty-num">' + item.qty + '</span>' +
-            '<button class="ah-cart-qty-btn" data-qty-inc data-id="' + esc(item.id) + '" aria-label="Increase quantity">&#43;</button>' +
+            '<button class="ah-cart-qty-btn" data-qty-inc data-id="' + esc(itemKey) + '" aria-label="Increase quantity">&#43;</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -282,19 +284,24 @@
     if (!btn) return;
     var qtyEl = document.getElementById('ahProductQtyNum');
     var qty   = qtyEl ? Math.max(1, parseInt(qtyEl.textContent, 10) || 1) : 1;
-    var id    = String(btn.getAttribute('data-id'));
+    var productId = String(btn.getAttribute('data-id'));
+    var activeGrind = document.querySelector('.ah-grind-option.is-active');
+    var grind = activeGrind ? activeGrind.textContent.trim() : '';
+    var cartKey = productId + (grind ? '|' + grind : '');
     var cart  = loadCart();
-    if (cart[id]) {
-      cart[id].qty = Math.min(cart[id].qty + qty, 99);
+    if (cart[cartKey]) {
+      cart[cartKey].qty = Math.min(cart[cartKey].qty + qty, 99);
     } else {
-      cart[id] = {
-        id:     id,
+      cart[cartKey] = {
+        key:    cartKey,
+        id:     productId,
         name:   btn.getAttribute('data-name')   || 'Unknown',
         origin: btn.getAttribute('data-origin') || '',
         price:  parseFloat(String(btn.getAttribute('data-price') || '').replace(/[^0-9.]/g, '')) || 0,
         image:  btn.getAttribute('data-image')  || '',
         roast:  btn.getAttribute('data-roast')  || '',
         tags:   (btn.getAttribute('data-tags') || '').split(',').filter(Boolean),
+        grind:  grind,
         qty:    qty
       };
     }
@@ -316,6 +323,22 @@
     qtyInc.addEventListener('click', function () {
       var q = parseInt(qtyNum.textContent, 10);
       if (q < 99) qtyNum.textContent = q + 1;
+    });
+  }());
+
+  /* â”€â”€ grind size toggle â”€â”€ */
+  (function () {
+    var grindGrid = document.querySelector('.ah-grind-grid');
+    if (!grindGrid) return;
+    grindGrid.addEventListener('click', function (e) {
+      var btn = e.target.closest('.ah-grind-option');
+      if (!btn) return;
+      grindGrid.querySelectorAll('.ah-grind-option').forEach(function (el) {
+        el.classList.remove('is-active');
+        el.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('is-active');
+      btn.setAttribute('aria-pressed', 'true');
     });
   }());
 
