@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../backend/auth_guard.php';
 require_once __DIR__ . '/../backend/env.php';
 require_once __DIR__ . '/../backend/order_service.php';
+require_once __DIR__ . '/../backend/order_mailer.php';
 require_login();
 
 header('Content-Type: application/json');
@@ -313,6 +314,7 @@ if ($action === 'capture') {
     }
 
     ah_checkout_mark_order_paid($localOrderId, $currentUserId);
+    ah_send_order_confirmation($localOrderId, $currentUserId);
     ah_checkout_add_payment_log(
         $localOrderId,
         'paypal',
