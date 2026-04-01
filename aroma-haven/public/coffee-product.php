@@ -2,6 +2,7 @@
 $pageTitle = 'Aroma Haven | Coffee Product';
 $bodyClass = 'ah-shell-xr';
 
+require_once __DIR__ . '/../backend/init.php';
 require_once __DIR__ . '/../includes/bean-catalog.php';
 
 $beanId = isset($_GET['bean']) ? (int) $_GET['bean'] : 0;
@@ -15,6 +16,12 @@ $grindOptions = ['Whole bean', 'French Press', 'Filter Drip', 'Espresso'];
 
 // Related beans — all active products except current
 $relatedBeans = [];
+$reviews = [];
+$reviewCount = 0;
+$avgRating = 0;
+$userHasReviewed = false;
+$userExistingReview = null;
+
 if ($bean !== null) {
   $conn = connect_db();
   $stmt = $conn->prepare(
@@ -24,6 +31,32 @@ if ($bean !== null) {
   $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   foreach ($rows as $row) {
     $relatedBeans[] = ah_row_to_bean($row);
+  }
+
+  // Fetch reviews
+  $stmt = $conn->prepare(
+    "SELECT r.id, r.rating, r.body, r.created_at,
+            COALESCE(CONCAT(p.fname, ' ', p.lname), 'Anonymous') AS reviewer_name
+     FROM product_reviews r
+     LEFT JOIN user_profiles p ON p.user_id = r.user_id
+     WHERE r.product_id = ?
+     ORDER BY r.created_at DESC"
+  );
+  $stmt->execute([$bean['id']]);
+  $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  $reviewCount = count($reviews);
+  if ($reviewCount > 0) {
+    $avgRating = round(array_sum(array_column($reviews, 'rating')) / $reviewCount, 1);
+  }
+
+  // Fetch logged-in user's existing review (if any)
+  if ($auth->isLogged()) {
+    $stmt = $conn->prepare(
+      "SELECT id, rating, body FROM product_reviews WHERE product_id = ? AND user_id = ? LIMIT 1"
+    );
+    $stmt->execute([$bean['id'], (int) $auth->getCurrentUID()]);
+    $userExistingReview = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    $userHasReviewed = $userExistingReview !== null;
   }
 }
 
@@ -68,9 +101,14 @@ include __DIR__ . '/../includes/navbar.php';
                 <p class="ah-coffee-price mb-0"><?php echo htmlspecialchars($bean['price'], ENT_QUOTES, 'UTF-8'); ?></p>
                 <div class="d-flex align-items-center gap-2">
                   <div class="ah-coffee-stars" aria-hidden="true">
-                    <span>&#9733;</span><span>&#9733;</span><span>&#9733;</span><span>&#9733;</span><span>&#9733;</span>
+                    <?php
+                    $fullStars  = $reviewCount > 0 ? (int) round($avgRating) : 0;
+                    $emptyStars = 5 - $fullStars;
+                    echo str_repeat('<span>&#9733;</span>', $fullStars);
+                    echo str_repeat('<span style="opacity:.3">&#9733;</span>', $emptyStars);
+                    ?>
                   </div>
-                  <span class="ah-coffee-review-count">42 reviews</span>
+                  <span class="ah-coffee-review-count"><?php echo $reviewCount; ?> review<?php echo $reviewCount !== 1 ? 's' : ''; ?></span>
                 </div>
               </div>
 
@@ -145,11 +183,72 @@ include __DIR__ . '/../includes/navbar.php';
       <p class="ah-coffee-kicker mb-2">Community Notes</p>
       <h2 class="ah-coffee-reviews-title mb-0">What Coffee Drinkers Are Saying</h2>
     </header>
-    <div class="row g-4">
-      <div class="col-12 text-center text-muted py-4">
-        <p class="mb-0">No reviews yet. Be the first to share your experience.</p>
+
+    <?php if ($bean !== null): ?>
+      <?php $flashMsg = $_SESSION['msg'] ?? ''; $flashErr = $_SESSION['error'] ?? ''; unset($_SESSION['msg'], $_SESSION['error']); ?>
+      <?php if ($flashMsg): ?>
+        <div class="alert alert-success mb-4"><?php echo htmlspecialchars($flashMsg, ENT_QUOTES, 'UTF-8'); ?></div>
+      <?php endif; ?>
+      <?php if ($flashErr): ?>
+        <div class="alert alert-danger mb-4"><?php echo htmlspecialchars($flashErr, ENT_QUOTES, 'UTF-8'); ?></div>
+      <?php endif; ?>
+
+      <?php if ($auth->isLogged()): ?>
+        <div class="card border mb-5 p-4">
+          <h3 class="h5 mb-3"><?php echo $userHasReviewed ? 'Edit Your Review' : 'Leave a Review'; ?></h3>
+          <form method="POST" action="route.php">
+            <input type="hidden" name="action" value="<?php echo $userHasReviewed ? 'update_review' : 'submit_review'; ?>">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="hidden" name="product_id" value="<?php echo (int) $bean['id']; ?>">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Rating</label>
+              <div class="d-flex gap-2">
+                <?php for ($i = 1; $i <= 5; $i++): ?>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="rating" id="star<?php echo $i; ?>" value="<?php echo $i; ?>"
+                      <?php echo ($userExistingReview && (int)$userExistingReview['rating'] === $i) ? 'checked' : ''; ?> required>
+                    <label class="form-check-label" for="star<?php echo $i; ?>"><?php echo $i; ?>&#9733;</label>
+                  </div>
+                <?php endfor; ?>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="reviewBody" class="form-label fw-semibold">Your Review</label>
+              <textarea class="form-control" id="reviewBody" name="body" rows="3" maxlength="1000" minlength="5" required placeholder="Share your experience with this coffee..."><?php echo $userExistingReview ? htmlspecialchars($userExistingReview['body'], ENT_QUOTES, 'UTF-8') : ''; ?></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"><?php echo $userHasReviewed ? 'Update Review' : 'Submit Review'; ?></button>
+          </form>
+        </div>
+      <?php else: ?>
+        <p class="mb-4 text-muted"><a href="login.php">Log in</a> to leave a review.</p>
+      <?php endif; ?>
+
+      <div class="row g-4">
+        <?php if (empty($reviews)): ?>
+          <div class="col-12 text-center text-muted py-4">
+            <p class="mb-0">No reviews yet. Be the first to share your experience.</p>
+          </div>
+        <?php else: ?>
+          <?php foreach ($reviews as $review): ?>
+            <div class="col-12 col-md-6">
+              <div class="card border p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="fw-semibold"><?php echo htmlspecialchars($review['reviewer_name'], ENT_QUOTES, 'UTF-8'); ?></span>
+                  <span class="text-muted small"><?php echo htmlspecialchars(date('d M Y', strtotime($review['created_at'])), ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div class="mb-2" aria-label="Rating: <?php echo (int) $review['rating']; ?> out of 5">
+                  <?php
+                  echo str_repeat('&#9733;', (int) $review['rating']);
+                  echo str_repeat('<span style="opacity:.3">&#9733;</span>', 5 - (int) $review['rating']);
+                  ?>
+                </div>
+                <p class="mb-0"><?php echo htmlspecialchars($review['body'], ENT_QUOTES, 'UTF-8'); ?></p>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </div>
-    </div>
+    <?php endif; ?>
   </section>
 
   <?php if (!empty($relatedBeans)): ?>

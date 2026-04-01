@@ -3,6 +3,7 @@ require_once __DIR__ . '/../backend/init.php';
 require_once __DIR__ . '/../backend/register.php';
 require_once __DIR__ . '/../backend/login.php';
 require_once __DIR__ . '/../backend/otp.php';
+require_once __DIR__ . '/../backend/review_process.php';
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo "Method Not Allowed";
@@ -75,6 +76,26 @@ switch ($action) {
         unset($_SESSION['otp_pending_user_id'], $_SESSION['otp_pending_email'], $_SESSION['otp_verified']);
         session_destroy();
         header("Location: login.php");
+        exit;
+    case 'submit_review':
+        $productId = (int) ($_POST['product_id'] ?? 0);
+        $error = review_process($_POST);
+        if (empty($error)) {
+            $_SESSION['msg'] = 'Your review has been posted. Thank you!';
+        } else {
+            $_SESSION['error'] = $error;
+        }
+        header('Location: coffee-product.php?bean=' . $productId);
+        exit;
+    case 'update_review':
+        $productId = (int) ($_POST['product_id'] ?? 0);
+        $error = review_update($_POST);
+        if (empty($error)) {
+            $_SESSION['msg'] = 'Your review has been updated.';
+        } else {
+            $_SESSION['error'] = $error;
+        }
+        header('Location: coffee-product.php?bean=' . $productId);
         exit;
     default:
         http_response_code(400);
