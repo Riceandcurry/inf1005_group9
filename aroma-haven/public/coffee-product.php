@@ -65,26 +65,25 @@ include __DIR__ . '/../includes/navbar.php';
 ?>
 
 <main class="ah-coffee-product-page">
-  <nav class="container ah-coffee-breadcrumb-wrap" aria-label="Breadcrumb">
+  <section class="container ah-coffee-breadcrumb-wrap">
     <a href="shop-coffee.php" class="ah-coffee-breadcrumb">&larr; Back to Shop</a>
-  </nav>
+  </section>
 
   <section class="container ah-coffee-bean-section">
-    <h2 class="visually-hidden">Product Details</h2>
     <?php if ($bean === null): ?>
       <div class="alert alert-light border text-center p-4 ah-coffee-missing" role="alert">
-        <h1 class="h3 mb-2">Bean not found</h2>
+        <h1 class="h3 mb-2">Bean not found</h1>
         <p class="mb-3">Please select a bean from our coffee collection.</p>
         <a href="shop-coffee.php" class="btn btn-primary">Back to Shop</a>
       </div>
     <?php else: ?>
       <div class="row gx-lg-4 gy-4 align-items-start ah-coffee-top mx-auto">
         <div class="col-12 col-lg-6 d-flex justify-content-center">
-          <div class="ah-coffee-media-card w-100">
+          <article class="ah-coffee-media-card w-100">
             <div class="ah-coffee-image-wrap">
               <img src="<?php echo htmlspecialchars($bean['image'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($bean['name'], ENT_QUOTES, 'UTF-8'); ?>" class="ah-coffee-image">
             </div>
-          </div>
+          </article>
         </div>
 
         <div class="col-12 col-lg-6">
@@ -94,7 +93,7 @@ include __DIR__ . '/../includes/navbar.php';
               <span class="badge badge-sage ah-coffee-roast"><?php echo htmlspecialchars($bean['roast'] ?? 'Light roast', ENT_QUOTES, 'UTF-8'); ?></span>
 
               <div>
-                <h2 class="ah-coffee-title mb-1"><?php echo htmlspecialchars($bean['name'], ENT_QUOTES, 'UTF-8'); ?></h2>
+                <h1 class="ah-coffee-title mb-1"><?php echo htmlspecialchars($bean['name'], ENT_QUOTES, 'UTF-8'); ?></h1>
                 <p class="ah-coffee-origin mb-0"><?php echo htmlspecialchars($bean['origin'], ENT_QUOTES, 'UTF-8'); ?></p>
               </div>
 
@@ -113,7 +112,7 @@ include __DIR__ . '/../includes/navbar.php';
                 </div>
               </div>
 
-              <div class="ah-coffee-facts" role="group" aria-label="Bean details">
+              <div class="ah-coffee-facts" aria-label="Bean details">
                 <?php if (!empty($bean['process'])): ?>
                   <div class="ah-coffee-fact">
                     <p class="text-overline mb-1">Process</p>
@@ -237,7 +236,7 @@ include __DIR__ . '/../includes/navbar.php';
                   <span class="fw-semibold"><?php echo htmlspecialchars($review['reviewer_name'], ENT_QUOTES, 'UTF-8'); ?></span>
                   <span class="text-muted small"><?php echo htmlspecialchars(date('d M Y', strtotime($review['created_at'])), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
-                <div class="mb-2" role="img" aria-label="Rating: <?php echo (int) $review['rating']; ?> out of 5">
+                <div class="mb-2" aria-label="Rating: <?php echo (int) $review['rating']; ?> out of 5">
                   <?php
                   echo str_repeat('&#9733;', (int) $review['rating']);
                   echo str_repeat('<span style="opacity:.3">&#9733;</span>', 5 - (int) $review['rating']);
