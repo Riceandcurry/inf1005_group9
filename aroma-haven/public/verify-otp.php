@@ -78,7 +78,7 @@ include __DIR__ . '/../includes/header.php';
 ?>
 
 <main id="main-content" class="ah-auth-page">
-  <section class="ah-auth-layout">
+  <div class="ah-auth-layout">
     <aside class="ah-auth-media" aria-hidden="true">
       <img src="./images/assets/auth-visual.jpg" alt="">
       <div class="ah-auth-media-copy">
@@ -88,13 +88,13 @@ include __DIR__ . '/../includes/header.php';
       </div>
     </aside>
 
-    <section class="ah-auth-panel-wrap" aria-labelledby="otp-title">
+    <div class="ah-auth-panel-wrap">
       <div class="ah-auth-topbar">
         <a href="login.php" class="ah-auth-back">&larr; Back to Login</a>
         <span class="ah-auth-brand">Aroma Haven</span>
       </div>
 
-      <article class="ah-auth-panel">
+      <div class="ah-auth-panel">
         <h1 id="otp-title" class="ah-auth-title">Check your email.</h1>
         <p class="ah-auth-subtitle">
           We sent a 6-digit code to
@@ -135,9 +135,9 @@ include __DIR__ . '/../includes/header.php';
           <input type="hidden" name="resend" value="1">
           <button type="submit" class="btn btn-link ah-auth-link p-0">Resend code</button>
         </form>
-      </article>
-    </section>
-  </section>
+      </div>
+    </div>
+  </div>
 </main>
 
 </body>
