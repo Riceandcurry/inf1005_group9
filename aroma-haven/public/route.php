@@ -47,6 +47,17 @@ switch ($action) {
                 $userId    = (int) ($row['id'] ?? 0);
                 $userEmail = $row['email'] ?? '';
             }
+            $conn = connect_db();
+            $skipStmt = $conn->prepare("SELECT skip_otp FROM phpauth_users WHERE id = ? LIMIT 1");
+            $skipStmt->execute([$userId]);
+            $skipOtp = (bool) $skipStmt->fetchColumn();
+
+            if ($skipOtp) {
+                $_SESSION['otp_verified'] = true;
+                header("Location: shop-coffee.php");
+                exit;
+            }
+
             $_SESSION['otp_pending_user_id'] = $userId;
             $_SESSION['otp_pending_email']   = $userEmail;
             $_SESSION['otp_verified'] = false;
