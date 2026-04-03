@@ -51,7 +51,7 @@ include __DIR__ . '/../includes/navbar.php';
     </header>
   </section>
 
-  <section class="container ah-contact-content" aria-labelledby="contact-info-heading">
+  <div class="container ah-contact-content">
     <div class="row g-4 g-xl-5 align-items-start">
       <div class="col-12 col-lg-5">
         <article class="ah-contact-panel">
@@ -150,7 +150,7 @@ include __DIR__ . '/../includes/navbar.php';
         </section>
       </div>
     </div>
-  </section>
+  </div>
 </main>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

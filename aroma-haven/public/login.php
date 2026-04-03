@@ -7,7 +7,7 @@ include __DIR__ . '/../includes/header.php';
 ?>
 
 <main id="main-content" class="ah-auth-page">
-  <section class="ah-auth-layout">
+  <div class="ah-auth-layout">
     <aside class="ah-auth-media" aria-hidden="true">
       <img src="./images/assets/auth-visual.jpg" alt="">
       <div class="ah-auth-media-copy">
@@ -17,13 +17,13 @@ include __DIR__ . '/../includes/header.php';
       </div>
     </aside>
 
-    <section class="ah-auth-panel-wrap" aria-labelledby="login-title">
+    <div class="ah-auth-panel-wrap">
       <div class="ah-auth-topbar">
         <a href="shop-coffee.php" class="ah-auth-back">&larr; Back to Shop</a>
         <span class="ah-auth-brand">Aroma Haven</span>
       </div>
 
-      <article class="ah-auth-panel">
+      <div class="ah-auth-panel">
         <h1 id="login-title" class="ah-auth-title">Welcome back.</h1>
         <p class="ah-auth-subtitle">Sign in to reach your coffee cabinet and checkout in seconds.</p>
 
@@ -53,9 +53,9 @@ include __DIR__ . '/../includes/header.php';
         <p class="ah-auth-footnote">
           Don&apos;t have an account? <a href="register.php" class="ah-auth-link">Create one now</a>
         </p>
-      </article>
-    </section>
-  </section>
+      </div>
+    </div>
+  </div>
 </main>
 
 </body>
