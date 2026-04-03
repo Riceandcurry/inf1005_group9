@@ -90,7 +90,7 @@ include __DIR__ . '/../includes/header.php';
 
     <div class="ah-auth-panel-wrap">
       <div class="ah-auth-topbar">
-        <a href="login.php" class="ah-auth-back">&larr; Back to Login</a>
+        <a href="logout.php" class="ah-auth-back">&larr; Back to Login</a>
         <span class="ah-auth-brand">Aroma Haven</span>
       </div>
 
